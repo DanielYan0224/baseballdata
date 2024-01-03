@@ -67,3 +67,36 @@ sns.heatmap(data, cmap="YlGnBu", annot=True, fmt="d", linewidths=.5, square=True
 # Show the plot
 plt.show()
 #%%
+# Create an initial 8x8 matrix
+matrix = [
+    [1, 2, 3, 4, 5, 6, 7, 8],
+    [2, 3, 4, 5, 6, 7, 8, 9],
+    [3, 4, 5, 6, 7, 8, 9, 10],
+    [4, 5, 6, 7, 8, 9, 10, 11],
+    [5, 6, 7, 8, 9, 10, 11, 12],
+    [6, 7, 8, 9, 10, 11, 12, 13],
+    [7, 8, 9, 10, 11, 12, 13, 14],
+    [8, 9, 10, 11, 12, 13, 14, 15]
+]
+
+# Define the submatrix to modify (starting and ending indices)
+start_row, end_row = 1, 4  # Rows 1 to 3
+start_col, end_col = 2, 5  # Columns 2 to 4
+
+# Define the new value
+new_value = 99
+
+# Modify the specified submatrix
+for i in range(start_row, end_row + 1):
+    for j in range(start_col, end_col + 1):
+        matrix[i][j] = new_value
+
+# Print the modified matrix
+for row in matrix:
+    print(row)
+
+sns.heatmap(matrix, cmap="YlGnBu", annot=True, fmt="d", linewidths=.5, square=True, cbar_kws={"shrink": 0.8})
+
+# Show the plot
+plt.show()
+#%%
