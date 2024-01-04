@@ -80,16 +80,37 @@ matrix = [
 ]
 
 # Define the submatrix to modify (starting and ending indices)
-start_row, end_row = 1, 4  # Rows 1 to 3
-start_col, end_col = 2, 5  # Columns 2 to 4
+#zone1
+start_row_1, end_row_1 = 1, 2  # Rows 1 to 2
+start_col_1, end_col_1 = 1, 2  # Columns 1 to 2
+#zone2
+start_row_2, end_row_2 = 1, 2  # Rows 1 to 2
+start_col_2, end_col_2 = 3, 4  # Columns 3 to 4
+#zone3
+start_row_3, end_row_3 = 1, 2  # Rows 1 to 2
+start_col_3, end_col_3 = 5, 6  # Columns 5 to 6
 
 # Define the new value
-new_value = 99
+new_value_1 = 10
+new_value_2 = 20
+new_value_3 = 30
 
 # Modify the specified submatrix
-for i in range(start_row, end_row + 1):
-    for j in range(start_col, end_col + 1):
-        matrix[i][j] = new_value
+#zone1
+for i in range(start_row_1, end_row_1 + 1):
+    for j in range(start_col_1, end_col_1 + 1):
+        matrix[i][j] = new_value_1
+
+#zone2
+for i in range(start_row_2, end_row_2 + 1):
+    for j in range(start_col_2, end_col_2 + 1):
+        matrix[i][j] = new_value_2
+
+#zone3
+for i in range(start_row_3, end_row_3 + 1):
+    for j in range(start_col_3, end_col_3 + 1):
+        matrix[i][j] = new_value_3
+
 
 # Print the modified matrix
 for row in matrix:
@@ -99,5 +120,6 @@ sns.heatmap(matrix, cmap="YlGnBu", annot=True, fmt="d", linewidths=.5, square=Tr
 
 # Show the plot
 plt.show()
-123
+
+#%%
 #%%
