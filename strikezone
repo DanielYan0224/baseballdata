@@ -67,7 +67,10 @@ sns.heatmap(data, cmap="YlGnBu", annot=True, fmt="d", linewidths=.5, square=True
 # Show the plot
 plt.show()
 #%%
-# Create an initial 8x8 matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+#Create an initial 8x8 matrix
 matrix = [
     [1, 2, 3, 4, 5, 6, 7, 8],
     [2, 3, 4, 5, 6, 7, 8, 9],
@@ -79,46 +82,25 @@ matrix = [
     [8, 9, 10, 11, 12, 13, 14, 15]
 ]
 
-# Define the submatrix to modify (starting and ending indices)
-#zone1
-start_row_1, end_row_1 = 1, 2  # Rows 1 to 2
-start_col_1, end_col_1 = 1, 2  # Columns 1 to 2
-#zone2
-start_row_2, end_row_2 = 1, 2  # Rows 1 to 2
-start_col_2, end_col_2 = 3, 4  # Columns 3 to 4
-#zone3
-start_row_3, end_row_3 = 1, 2  # Rows 1 to 2
-start_col_3, end_col_3 = 5, 6  # Columns 5 to 6
 
-# Define the new value
-new_value_1 = 10
-new_value_2 = 20
-new_value_3 = 30
+for i in range(1, 6, 2):
+  # Define the new value
+  for j in range(1, 6, 2):
+    new_value_i = (i+j)*5
 
-# Modify the specified submatrix
-#zone1
-for i in range(start_row_1, end_row_1 + 1):
-    for j in range(start_col_1, end_col_1 + 1):
-        matrix[i][j] = new_value_1
+    # Modify the specified submatrix
+    for row in range(i, i + 2):
+      for col in range(j, j + 2):
+        matrix[row][col] = new_value_i
 
-#zone2
-for i in range(start_row_2, end_row_2 + 1):
-    for j in range(start_col_2, end_col_2 + 1):
-        matrix[i][j] = new_value_2
-
-#zone3
-for i in range(start_row_3, end_row_3 + 1):
-    for j in range(start_col_3, end_col_3 + 1):
-        matrix[i][j] = new_value_3
-
-
-# Print the modified matrix
+#Print the modified matrix
 for row in matrix:
     print(row)
 
+#Plot the heatmap
 sns.heatmap(matrix, cmap="YlGnBu", annot=True, fmt="d", linewidths=.5, square=True, cbar_kws={"shrink": 0.8})
 
-# Show the plot
+#Show the plot
 plt.show()
 
 #%%
