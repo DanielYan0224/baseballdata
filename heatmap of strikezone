@@ -1,215 +1,21 @@
 pip install matplotlib
 pip install seaborn
-#%%
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-# Create an 8x8 matrix (you can replace this with your own data)
-data = [[1, 2, 3, 4, 5, 6, 7, 8],
-        [2, 3, 4, 5, 6, 7, 8, 9],
-        [3, 4, 5, 6, 7, 8, 9, 10],
-        [4, 5, 6, 7, 8, 9, 10, 11],
-        [5, 6, 7, 8, 9, 10, 11, 12],
-        [6, 7, 8, 9, 10, 11, 12, 13],
-        [7, 8, 9, 10, 11, 12, 13, 14],
-        [8, 9, 10, 11, 12, 13, 14, 15]]
-
-# Create a heatmap using Seaborn
-sns.heatmap(data, cmap="YlGnBu", annot=True, fmt="d", linewidths=.5, square=True, cbar_kws={"shrink": 0.8})
-
-# Show the plot
-plt.show()
+pip install numpy
 #%%
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import csv
 
-# Assuming data2023_edited_FF.csv has a column named 'key_mlbam'
-#data_2022_FF = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2023_edited_FF.csv")
+#Convert csv file to numpy.file   
+#testing = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\testing.csv")
+dict_from_csv = {}
 
-# Create an initial 8x8 matrix
-matrix = np.array([
-    [1, 2, 3, 4, 5, 6, 7, 8],
-    [2, 3, 4, 5, 6, 7, 8, 9],
-    [3, 4, 5, 6, 7, 8, 9, 10],
-    [4, 5, 6, 7, 8, 9, 10, 11],
-    [5, 6, 7, 8, 9, 10, 11, 12],
-    [6, 7, 8, 9, 10, 11, 12, 13],
-    [7, 8, 9, 10, 11, 12, 13, 14],
-    [8, 9, 10, 11, 12, 13, 14, 15]
-])
-l = [1,2,3,4,5,6,7,8,9]
-for i in range(1, 6, 2):
-    for j in range(1, 6, 2):
-        for k in range(2,10):
-        cnt = l[k-1]
-        new_value_i = cnt * 10
-        start_row_i, end_row_i = i, i + 1
-        start_col_i, end_col_i = j, j + 1
-        
-        # Modify the specified submatrix
-        matrix[start_row_i:end_row_i + 1, start_col_i:end_col_i + 1] = cnt
-        cnt = l[k]
-        
+with open(r"C:\Users\user\Desktop\baseballdata\testing.csv", mode="r") as inp:
+    reader = csv.reader(inp)
+    dict_from_csv = {rows[0]: rows[2] for rows in reader}
 
-# Print the modified matrix
-print(matrix)
-type(matrix)
-# Plot the heatmap
-plt.figure(figsize=(15, 8))
-sns.heatmap(matrix, cmap="YlGnBu", annot=True, fmt="d", linewidths=.5, square=True, cbar_kws={"shrink": 0.8})
-
-# Show the plot
-plt.show()
-
-#%%
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-data_2022_FF = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2023_edited_FF.csv")
-
-#Create an initial 8x8 matrix
-matrix = [
-    [1, 2, 3, 4, 5, 6, 7, 8],
-    [2, 3, 4, 5, 6, 7, 8, 9],
-    [3, 4, 5, 6, 7, 8, 9, 10],
-    [4, 5, 6, 7, 8, 9, 10, 11],
-    [5, 6, 7, 8, 9, 10, 11, 12],
-    [6, 7, 8, 9, 10, 11, 12, 13],
-    [7, 8, 9, 10, 11, 12, 13, 14],
-    [8, 9, 10, 11, 12, 13, 14, 15]
-]
-
-data_2022_FF3 = data_2022_FF.loc[:,'no swing']
-for i in range(1, 6, 2):
-  # Define the new value
-  cnt = data_2022_FF.loc[2 * i ,'no swing']
-  for j in range(1, 7, 2):
-    new_value_i = cnt
-    # Define the submatrix to modify (starting and ending indices)
-    # zone1
-    start_row_i, end_row_i = i, i + 1  # Rows 1 to 2
-    start_col_i, end_col_i = j, j + 1 # Columns i+1 to i+2
-    # Modify the specified submatrix
-    for row in range(start_row_i, end_row_i + 1):
-      for col in range(start_col_i, end_col_i + 1):
-        matrix[row][col] = new_value_i
-
-    cnt = data_2022_FF.loc[2 * (i+1) ,'no swing']
-
-#Print the modified matrix
-for row in matrix:
-    print(row)
-
-#Plot the heatmap
-sns.heatmap(matrix, cmap="YlGnBu", annot=True, fmt="d", linewidths=.5, square=True, cbar_kws={"shrink": 0.8})
-
-#Show the plot
-plt.show() 
-
-#print(data_2022_FF3)
-#print(data_2022_FF.loc[2*1,'no swing'])
-#%%
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-matrix = np.array([
-    [1, 2, 3, 4, 5, 6, 7, 8],
-    [2, 3, 4, 5, 6, 7, 8, 9],
-    [3, 4, 5, 6, 7, 8, 9, 10],
-    [4, 5, 6, 7, 8, 9, 10, 11],
-    [5, 6, 7, 8, 9, 10, 11, 12],
-    [6, 7, 8, 9, 10, 11, 12, 13],
-    [7, 8, 9, 10, 11, 12, 13, 14],
-    [8, 9, 10, 11, 12, 13, 14, 15]
-])
-
-
-l =[3,6,6,1,9,6,0,4,2]
-
-count = 0
-for i in range(1, 6, 2):
-    cnt = 10
-    for j in range(1, 6, 2):
-        new_value_i = l[count]
-        start_row_i, end_row_i = i, i + 1
-        start_col_i, end_col_i = j, j + 1
-        count +=1
-        # Modify the specified submatrix
-        matrix[start_row_i:end_row_i + 1, start_col_i:end_col_i + 1] = new_value_i
-        cnt = l[i]
-#11
-matrix[0][0] = matrix[0][1] = matrix[0][2] = matrix[0][3] = matrix[1][0]= matrix[2][0] = matrix[3][0] = 5
-#12
-matrix[0][4] = matrix[0][5] = matrix[0][6] = matrix[0][7] = matrix[1][7]= matrix[2][7] = matrix[3][7] = 8
-#13
-matrix[4][0] = matrix[5][0] = matrix[6][0] = matrix[7][0] = matrix[7][1]= matrix[7][2] = matrix[7][3] = 1
-#14
-matrix[5][7] = matrix[6][7] = matrix[7][4] = matrix[4][7] = matrix[7][5]= matrix[7][6] = matrix[7][7] = 0
-
-
-#Print the modified matrix
-print(matrix)
-print(type(matrix))
-#Plot the heatmap
-plt.figure(figsize=(15, 8))
-sns.heatmap(matrix, cmap="Reds", annot=True, fmt="d", linewidths=.5, square=True, cbar_kws={"shrink": 0.8})
-
-#Show the plot
-plt.show()
-
-#%%
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-#2023直球分析
-testing = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\testing.csv")
-
-# Create an initial 8x8 matrix
-ary_lst = [[11, 11, 11, 11, 12, 12, 12, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 4, 4, 5, 5, 6, 6, 12],
-    [13, 4, 4, 5, 5, 6, 6, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 13, 13, 13, 14, 14, 14, 14]]
-
-corres_lst = ary_lst.copy()
-
-d = {1: [0], 2: [0.25], 3: [0.16],
-     4: [0.05], 5: [0], 6: [0.02],
-     7: [0.08], 8: [0.07], 9:[0.11],
-     11: [0.99], 12: [0.89],
-     13: [0.76], 14: [0.87]}
-
-for i in range(8):
-    for j in range(8):
-        corres_lst[i][j] = d[ary_lst[i][j]]
-
-#將corres_lst轉成ndarray再reshape 8*8 array
-matrix = np.reshape(np.c_[corres_lst],(8,8))
-#Plot the heatmap
-plt.figure(figsize=(15, 8))
-sns.heatmap(matrix, cmap="YlOrRd", annot=True, fmt=".2f", linewidths=.5, square=True, cbar_kws={"shrink": 0.8})
-
-#Show the plot
-plt.show()
-#%%
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-
-#2023直球分析
-testing = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\testing.csv")
 
 # Create an initial 8x8 matrix
 strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
@@ -254,7 +60,6 @@ for i in range(8):
 #將numbers_corres_lst轉成ndarray再reshape 8*8 array
 numbers_corres_lst = np.reshape(np.c_[numbers_corres_lst],(8,8))
 
-
 #convert strikezone to ratio
 for i in range(8):
     for j in range(8):
@@ -262,14 +67,16 @@ for i in range(8):
 #將ratio_corres_lst轉成ndarray再reshape 8*8 array
 ratio_corres_lst = np.reshape(np.c_[ratio_corres_lst],(8,8))
 
+
 formatted_text = (np.asarray(["{0:.2f}\n ({1})".format( 
     ratio_corres_lst, numbers_corres_lst) for ratio_corres_lst, numbers_corres_lst in zip(ratio_corres_lst.flatten(), numbers_corres_lst.flatten())])).reshape(8, 8) 
 
 
 # drawing heatmap 
 fig, ax = plt.subplots() 
-ax = sns.heatmap(ratio_corres_lst, annot=formatted_text, fmt="", cmap="Reds")
+ax = sns.heatmap(ratio_corres_lst, annot=formatted_text, fmt="", cmap="hot")
 ax.set_title('2022 outs(hit into play) of swing') 
+
 
 #Draw the grid of strikezone
 for i in range(1, 8, 2):
@@ -283,9 +90,66 @@ for i in range(1, 8, 2):
     plt.axhline(y=4, xmin = 7/8, xmax = 1, color='black',linewidth=2)
     plt.axvline(x=4, ymin = 0, ymax = 1/8, color='black',linewidth=2)
     plt.axvline(x=4, ymin = 7/8, ymax = 1, color='black',linewidth=2)
-
         
 plt.show()
 #%%
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import csv
 
+#Convert csv file to numpy.file   
+#testing = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\testing.csv")
+dict_from_csv = {}
+
+with open(r"C:\Users\user\Desktop\baseballdata\testing.csv", mode="r") as inp:
+    reader = csv.reader(inp)
+    dict_from_csv = {rows[0]: rows[2] for rows in reader}
+
+# Create an initial 8x8 matrix
+strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
+    [11, 1, 1, 2, 2, 3, 3, 12],
+    [11, 1, 1, 2, 2, 3, 3, 12],
+    [11, 4, 4, 5, 5, 6, 6, 12],
+    [13, 4, 4, 5, 5, 6, 6, 14],
+    [13, 7, 7, 8, 8, 9, 9, 14],
+    [13, 7, 7, 8, 8, 9, 9, 14],
+    [13, 13, 13, 13, 14, 14, 14, 14]]
+strikezone_2 = [[11, 11, 11, 11, 12, 12, 12, 12],
+    [11, 1, 1, 2, 2, 3, 3, 12],
+    [11, 1, 1, 2, 2, 3, 3, 12],
+    [11, 4, 4, 5, 5, 6, 6, 12],
+    [13, 4, 4, 5, 5, 6, 6, 14],
+    [13, 7, 7, 8, 8, 9, 9, 14],
+    [13, 7, 7, 8, 8, 9, 9, 14],
+    [13, 13, 13, 13, 14, 14, 14, 14]]
+
+numbers_corres_lst = strikezone_1.copy()
+
+#convert strikezone to numbers
+for i in range(8):
+    for j in range(8):
+        numbers_corres_lst[i][j] = numbers[strikezone_1[i][j]]
+
+
+#將numbers_corres_lst轉成ndarray再reshape 8*8 array
+numbers_corres_lst = np.reshape(np.c_[numbers_corres_lst],(8,8))
+
+print(numbers_corres_lst)
+'''
+#check the keys of dic
+keys = dict_from_csv.keys()
+print(keys)
+
+
+
+for key in keys:
+    if key in dict_from_csv.keys():
+        print(dict_from_csv[key])
+    else:
+        print(f"'{key}' not found.")
+'''
 #%%
+
+#plt.imshow(ratio_corres_lst, cmap='hot')
