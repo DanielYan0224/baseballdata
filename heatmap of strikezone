@@ -1,3 +1,4 @@
+#%%
 pip install matplotlib
 pip install seaborn
 pip install numpy
@@ -101,11 +102,14 @@ import csv
 
 #Convert csv file to numpy.file   
 #testing = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\testing.csv")
-dict_from_csv = {}
+numbers = {}
 
-with open(r"C:\Users\user\Desktop\baseballdata\testing.csv", mode="r") as inp:
+with open(r"C:\Users\user\Desktop\baseballdata\testing.csv", mode='r') as inp:
     reader = csv.reader(inp)
-    dict_from_csv = {rows[0]: rows[2] for rows in reader}
+    numbers = {rows[0]: rows[2] for rows in reader}
+
+# Convert string keys to integers
+numbers_int = dict((int(k), int(v)) for k,v in numbers.items())
 
 # Create an initial 8x8 matrix
 strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
@@ -116,40 +120,23 @@ strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
     [13, 7, 7, 8, 8, 9, 9, 14],
     [13, 7, 7, 8, 8, 9, 9, 14],
     [13, 13, 13, 13, 14, 14, 14, 14]]
-strikezone_2 = [[11, 11, 11, 11, 12, 12, 12, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 4, 4, 5, 5, 6, 6, 12],
-    [13, 4, 4, 5, 5, 6, 6, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 13, 13, 13, 14, 14, 14, 14]]
 
 numbers_corres_lst = strikezone_1.copy()
+
 
 #convert strikezone to numbers
 for i in range(8):
     for j in range(8):
-        numbers_corres_lst[i][j] = numbers[strikezone_1[i][j]]
+        numbers_corres_lst[i][j] = numbers_int[strikezone_1[i][j]]
+
 
 
 #將numbers_corres_lst轉成ndarray再reshape 8*8 array
 numbers_corres_lst = np.reshape(np.c_[numbers_corres_lst],(8,8))
 
 print(numbers_corres_lst)
-'''
-#check the keys of dic
-keys = dict_from_csv.keys()
-print(keys)
-
-
-
-for key in keys:
-    if key in dict_from_csv.keys():
-        print(dict_from_csv[key])
-    else:
-        print(f"'{key}' not found.")
-'''
 #%%
 
-#plt.imshow(ratio_corres_lst, cmap='hot')
+
+
+#%%
