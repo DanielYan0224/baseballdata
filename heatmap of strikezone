@@ -1,132 +1,32 @@
-  #%%
 pip install matplotlib
 pip install seaborn
 pip install numpy
 pip install dash
 #%%
-'''
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import csv
-
-#Convert csv file to numpy.file   
-#testing = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\testing.csv")
-dict_from_csv = {}
-
-with open(r"C:\Users\user\Desktop\baseballdata\testing.csv", mode="r") as inp:
-    reader = csv.reader(inp)
-    dict_from_csv = {rows[0]: rows[2] for rows in reader}
-
-
-# Create an initial 8x8 matrix
-strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 4, 4, 5, 5, 6, 6, 12],
-    [13, 4, 4, 5, 5, 6, 6, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 13, 13, 13, 14, 14, 14, 14]]
-strikezone_2 = [[11, 11, 11, 11, 12, 12, 12, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 4, 4, 5, 5, 6, 6, 12],
-    [13, 4, 4, 5, 5, 6, 6, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 13, 13, 13, 14, 14, 14, 14]]
-
-numbers_corres_lst = strikezone_1.copy()
-ratio_corres_lst = strikezone_2.copy()
-
-#ration of zones
-ratio = {1: [0.75], 2: [0.59], 3: [0.67],
-     4: [0.78], 5: [0.66], 6: [0.59],
-     7: [0.82], 8: [0.69], 9:[0.50],
-     11: [0.57], 12: [0.50],
-     13: [0.75], 14: [0.40]}
-
-#numbers of zones
-numbers = {1: [12], 2: [17], 3: [4],
-     4: [14], 5: [21], 6: [13],
-     7: [9], 8: [18], 9:[10],
-     11: [17], 12: [3],
-     13: [6], 14: [2]}
-
-#convert strikezone to numbers
-for i in range(8):
-    for j in range(8):
-        numbers_corres_lst[i][j] = numbers[strikezone_1[i][j]]
-
-#將numbers_corres_lst轉成ndarray再reshape 8*8 array
-numbers_corres_lst = np.reshape(np.c_[numbers_corres_lst],(8,8))
-
-#convert strikezone to ratio
-for i in range(8):
-    for j in range(8):
-        ratio_corres_lst[i][j] = ratio[strikezone_2[i][j]]
-#將ratio_corres_lst轉成ndarray再reshape 8*8 array
-ratio_corres_lst = np.reshape(np.c_[ratio_corres_lst],(8,8))
-
-
-formatted_text = (np.asarray(["{0:.2f}\n ({1})".format( 
-    ratio_corres_lst, numbers_corres_lst) for ratio_corres_lst, numbers_corres_lst in zip(ratio_corres_lst.flatten(), numbers_corres_lst.flatten())])).reshape(8, 8) 
-
-
-# drawing heatmap 
-fig, ax = plt.subplots() 
-ax = sns.heatmap(ratio_corres_lst, annot=formatted_text, fmt="", cmap="hot")
-ax.set_title('2022 outs(hit into play) of swing') 
-
-
-#Draw the grid of strikezone
-for i in range(1, 8, 2):
-    
-    plt.axhline(i, color='black', xmin = 1/8, xmax = 7/8,
-                linewidth=2)
-    plt.axvline(i, ymin = 1/8, ymax = 7/8, 
-            color ='black', linewidth=2) 
-
-    plt.axhline(y=4, xmin = 0, xmax = 1/8, color='black',linewidth=2)
-    plt.axhline(y=4, xmin = 7/8, xmax = 1, color='black',linewidth=2)
-    plt.axvline(x=4, ymin = 0, ymax = 1/8, color='black',linewidth=2)
-    plt.axvline(x=4, ymin = 7/8, ymax = 1, color='black',linewidth=2)
-        
-plt.show()
-'''
-#%%
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import csv
 import fractions
-#establish heatmap of 2023
+import itertools
+import collections
 from fractions import Fraction as F
 numbers = {}
-
-#extract row_1 
-with open(r"C:\Users\user\Desktop\baseballdata\data2023_edited_FF.csv", mode="r", encoding="latin-1") as inp:
+rations = {}
+#extract quantity and put into Bracket 
+bracket = 1
+#extract ratio 
+ratio = 2
+#extract rows
+with open(r"C:\Users\閻天立\Desktop\pybaseball\testing.csv", mode='r') as inp:
     reader = csv.reader(inp)
-    # Skips the heading  
-    heading = next(inp) 
-    numbers = {rows[0]: rows[1] for rows in reader}
-#extract row_3
-with open(r"C:\Users\user\Desktop\baseballdata\data2023_edited_FF.csv", mode="r", encoding="latin-1") as inp:
+    numbers = {rows[0]: rows[bracket] for rows in reader}
+
+with open(r"C:\Users\閻天立\Desktop\pybaseball\testing.csv", mode='r') as inp:
     reader = csv.reader(inp)
-    # Skips the heading  
-    heading = next(inp) 
-    ratios = {rows[0]: rows[3] for rows in reader}
+    ratios = {rows[0]: rows[ratio] for rows in reader}
 
-# Convert string keys to integers
-numbers_int = dict((int(k), int(v)) for k,v in numbers.items())
-ratios_result = dict((int(k), float(v)) for k,v in ratios.items())
-
-
-
-# Create an initial 8x8 matrix
 # Create an initial 8x8 matrix
 strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
     [11, 1, 1, 2, 2, 3, 3, 12],
@@ -148,6 +48,9 @@ strikezone_2 = [[11, 11, 11, 11, 12, 12, 12, 12],
 numbers_corres_lst = strikezone_1.copy()
 ratio_corres_lst = strikezone_2.copy()
 
+# Convert string keys to integers
+numbers_int = dict((int(k), int(v)) for k,v in numbers.items())
+ratios_result = dict((int(k), float(v)) for k,v in ratios.items())
 
 #convert strikezone to numbers
 for i in range(8):
@@ -164,15 +67,30 @@ ratio_corres_lst = np.reshape(np.c_[ratio_corres_lst],(8,8))
 #將numbers_corres_lst轉成ndarray再reshape 8*8 array
 numbers_corres_lst = np.reshape(np.c_[numbers_corres_lst],(8,8))
 
-
+#emerge ratio_corres_lst and numbers_corres_lst
 formatted_text = (np.asarray(["{0:.2f}\n ({1})".format( 
-    ratio_corres_lst, numbers_corres_lst) for ratio_corres_lst, numbers_corres_lst in zip(ratio_corres_lst.flatten(), numbers_corres_lst.flatten())])).reshape(8, 8) 
+    ratio_corres_lst, numbers_corres_lst) 
+    for ratio_corres_lst, numbers_corres_lst 
+    in zip(ratio_corres_lst.flatten(), numbers_corres_lst.flatten())])).reshape(8, 8) 
 
 
 # drawing heatmap 
-fig, ax = plt.subplots() 
-ax = sns.heatmap(ratio_corres_lst, annot=formatted_text, fmt="", cmap="Blues", vmax=1, vmin=0)
-ax.set_title('2023 ball of no swing') 
+fig, ax = plt.subplots()
+ax = sns.heatmap(ratio_corres_lst, annot=False, fmt="", cmap="Blues", vmax=1, vmin=0)
+
+# Set the coordinates (row, column) for displaying values
+annotated_cells = [(0, 0), (0, 7), (7, 0), (7, 7), 
+                (2, 1), (2, 3), (2, 5), 
+                (4, 1), (4, 3), (4, 5),
+                (6, 1), (6, 3), (6, 5)] 
+for cell in annotated_cells:
+    ax.text(cell[1] + 0.5, cell[0] + 0.5, 
+            formatted_text[cell[0], cell[1]], 
+            ha='center', va='center', color='black')
+
+
+
+
 
 """
 #setting front of heatmap
@@ -201,108 +119,3 @@ for i in range(1, 8, 2):
     plt.axvline(x=8, ymin = 0, ymax = 1, color='black',linewidth=4)
 plt.show()
 #%%
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import csv
-import fractions
-
-#establish heatmap of 2022
-from fractions import Fraction as F
-numbers = {}
-
-#extract row_1 
-with open(r"C:\Users\user\Desktop\baseballdata\data2022_edited_FF.csv", mode="r", encoding="latin-1") as inp:
-    reader = csv.reader(inp)
-    # Skips the heading  
-    heading = next(inp) 
-    numbers = {rows[0]: rows[1] for rows in reader}
-#extract row_3
-with open(r"C:\Users\user\Desktop\baseballdata\data2022_edited_FF.csv", mode="r", encoding="latin-1") as inp:
-    reader = csv.reader(inp)
-    # Skips the heading  
-    heading = next(inp) 
-    ratios = {rows[0]: rows[3] for rows in reader}
-
-# Convert string keys to integers
-numbers_int = dict((int(k), int(v)) for k,v in numbers.items())
-ratios_result = dict((int(k), float(v)) for k,v in ratios.items())
-
-
-
-# Create an initial 8x8 matrix
-# Create an initial 8x8 matrix
-strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 4, 4, 5, 5, 6, 6, 12],
-    [13, 4, 4, 5, 5, 6, 6, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 13, 13, 13, 14, 14, 14, 14]]
-strikezone_2 = [[11, 11, 11, 11, 12, 12, 12, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 1, 1, 2, 2, 3, 3, 12],
-    [11, 4, 4, 5, 5, 6, 6, 12],
-    [13, 4, 4, 5, 5, 6, 6, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 7, 7, 8, 8, 9, 9, 14],
-    [13, 13, 13, 13, 14, 14, 14, 14]]
-
-numbers_corres_lst = strikezone_1.copy()
-ratio_corres_lst = strikezone_2.copy()
-
-
-#convert strikezone to numbers
-for i in range(8):
-    for j in range(8):
-        numbers_corres_lst[i][j] = numbers_int[strikezone_1[i][j]]
-
-#convert strikezone to ratio
-for i in range(8):
-    for j in range(8):
-        ratio_corres_lst[i][j] = ratios_result[strikezone_2[i][j]]
-
-#將ratio_corres_lst轉成ndarray再reshape 8*8 array
-ratio_corres_lst = np.reshape(np.c_[ratio_corres_lst],(8,8))
-#將numbers_corres_lst轉成ndarray再reshape 8*8 array
-numbers_corres_lst = np.reshape(np.c_[numbers_corres_lst],(8,8))
-
-
-formatted_text = (np.asarray(["{0:.2f}\n ({1})".format( 
-    ratio_corres_lst, numbers_corres_lst) for ratio_corres_lst, numbers_corres_lst in zip(ratio_corres_lst.flatten(), numbers_corres_lst.flatten())])).reshape(8, 8) 
-
-
-# drawing heatmap 
-fig, ax = plt.subplots() 
-ax = sns.heatmap(ratio_corres_lst, annot=formatted_text, fmt="", cmap="Blues", vmax=1, vmin=0)
-ax.set_title('2022 ball of no swing') 
-
-"""
-#setting front of heatmap
-plt.rcParams['font.sans-serif'] = 'Times New Roman '
-plt.rcParams.update({'font.size': 9})
-plt.tick_params(axis='both', which='both', length=0)
-"""
-#Draw the grid of strikezone
-for i in range(1, 8, 2):
-    
-    plt.axhline(i, color='black', xmin = 1/8, xmax = 7/8,
-                linewidth=2)
-    plt.axvline(i, ymin = 1/8, ymax = 7/8, 
-            color ='black', linewidth=2) 
-    #上下分隔線
-    plt.axvline(x=4, ymin = 0, ymax = 1/8, color='black',linewidth=2)
-    plt.axvline(x=4, ymin = 7/8, ymax = 1, color='black',linewidth=2)
-    #左右分隔線
-    plt.axhline(y=4, xmin = 0, xmax = 1/8, color='black',linewidth=2)
-    plt.axhline(y=4, xmin = 7/8, xmax = 1, color='black',linewidth=2)
-    #upper and lower board line
-    plt.axhline(y=8, xmin = 0, xmax = 1, color='black',linewidth=4)
-    plt.axhline(y=0, xmin = 0, xmax = 1, color='black',linewidth=4)
-    #left and right board line
-    plt.axvline(x=0, ymin = 0, ymax = 1, color='black',linewidth=4)
-    plt.axvline(x=8, ymin = 0, ymax = 1, color='black',linewidth=4)
-plt.show()
-# %%
