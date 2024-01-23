@@ -175,7 +175,7 @@ ax = sns.heatmap(ratio_corres_lst, annot=False, fmt="", cmap="Reds")
 annotated_cells = [(0, 0), (0, 7), (7, 0), (7, 7), 
                 (2, 1), (2, 3), (2, 5), 
                 (4, 1), (4, 3), (4, 5),
-                (6, 1), (6, 3), (6, 5)]
+                (6, 1), (6, 3), (6, 5)] q
 for cell in annotated_cells:
     ax.text(cell[1] + 0.5, cell[0] + 0.5, 
             formatted_text[cell[0], cell[1]], 
