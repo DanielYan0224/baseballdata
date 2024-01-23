@@ -89,9 +89,6 @@ for cell in annotated_cells:
             ha='center', va='center', color='black')
 
 
-
-
-
 """
 #setting front of heatmap
 plt.rcParams['font.sans-serif'] = 'Times New Roman '
