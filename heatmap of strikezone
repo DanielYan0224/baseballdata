@@ -1,4 +1,4 @@
-pip install matplotlib
+pip install m  atplotlib
 pip install seaborn
 pip install numpy
 pip install dash
@@ -12,20 +12,36 @@ import fractions
 import itertools
 import collections
 from fractions import Fraction as F
-numbers = {}
-rations = {}
-#extract quantity and put into Bracket 
-bracket = 1
-#extract ratio 
-ratio = 2
-#extract rows
-with open(r"C:\Users\閻天立\Desktop\pybaseball\testing.csv", mode='r') as inp:
-    reader = csv.reader(inp)
-    numbers = {rows[0]: rows[bracket] for rows in reader}
 
-with open(r"C:\Users\閻天立\Desktop\pybaseball\testing.csv", mode='r') as inp:
-    reader = csv.reader(inp)
-    ratios = {rows[0]: rows[ratio] for rows in reader}
+# Function to get contrasting text color based on background color
+def get_text_color(val, threshold=0.5):
+    if val < threshold:
+        return 'black'
+    else:
+        return 'white'
+
+
+numbers = {}
+numerators ={}
+denominators = {}
+
+bracket = denominator ='no_swing'
+numerator = 'ball'
+
+#%%
+#caption of 
+year = '2022'
+#establish 
+with open(r"C:\Users\user\Desktop\baseballdata\data2022_edited_FF.csv", mode='r') as inp:
+    reader = csv.DictReader(inp)
+
+    # Read all rows into a list
+    rows_list = list(reader)
+
+    # Create dictionaries for numbers, numerators and denominators
+    numbers = {row['title']: row[bracket] for row in rows_list}
+    numerators = {row['title']: row[numerator] for row in rows_list}
+    denominators = {row['title']: row[denominator] for row in rows_list}
 
 # Create an initial 8x8 matrix
 strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
@@ -48,9 +64,15 @@ strikezone_2 = [[11, 11, 11, 11, 12, 12, 12, 12],
 numbers_corres_lst = strikezone_1.copy()
 ratio_corres_lst = strikezone_2.copy()
 
-# Convert string keys to integers
-numbers_int = dict((int(k), int(v)) for k,v in numbers.items())
-ratios_result = dict((int(k), float(v)) for k,v in ratios.items())
+
+# extract rows and convert them to integers
+numbers_int = {int(key): int(value) for key, value in numbers.items()}
+numerators_int = {int(key): int(value) for key, value in numerators.items()}
+denominators_int = {int(key): int(value) for key, value in denominators.items()}
+
+# Create a new dictionary with fractions
+ratios = {key: F(numerators_int[key], denominators_int[key]) for key in numerators_int}
+ratios_result = {int(key): round(float(value), 2) for key, value in ratios.items()}
 
 #convert strikezone to numbers
 for i in range(8):
@@ -76,43 +98,68 @@ formatted_text = (np.asarray(["{0:.2f}\n ({1})".format(
 
 # drawing heatmap 
 fig, ax = plt.subplots()
-ax = sns.heatmap(ratio_corres_lst, annot=False, fmt="", cmap="Blues", vmax=1, vmin=0)
+ax = sns.heatmap(ratio_corres_lst, annot=False, fmt="", cmap="gist_heat_r", vmax=1, vmin=0)
 
-# Set the coordinates (row, column) for displaying values
-annotated_cells = [(0, 0), (0, 7), (7, 0), (7, 7), 
-                (2, 1), (2, 3), (2, 5), 
+
+annotated_cells = [ (2, 1), (2, 3), (2, 5), 
                 (4, 1), (4, 3), (4, 5),
                 (6, 1), (6, 3), (6, 5)] 
-for cell in annotated_cells:
+annotated_cells_boder =[(0, 0), (0, 7), (7, 0), (7, 7)]
+'''
+for i in range(ratio_corres_lst.shape[0]):
+    for j in range(ratio_corres_lst[1]):
+        for cell in annotated_cells_boder:
     ax.text(cell[1] + 0.5, cell[0] + 0.5, 
             formatted_text[cell[0], cell[1]], 
-            ha='center', va='center', color='black')
+            ha='center', va='center',  color=text_color,
+            fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
+'''
+# Annotate cells with formatted text
+for cell in annotated_cells:
+    value = ratio_corres_lst[cell[0], cell[1]]
+    text_color = get_text_color(value)
 
+    ax.text(cell[1] + 1, cell[0], formatted_text[cell[0], cell[1]],
+            ha='center', va='center', color=text_color,
+            fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
 
+for cell in annotated_cells_boder:
+    value = ratio_corres_lst[cell[0], cell[1]]
+    text_color = get_text_color(value)
+
+    ax.text(cell[1] + 0.5, cell[0] + 0.5, formatted_text[cell[0], cell[1]],
+            ha='center', va='center', color=text_color,
+            fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
 """
 #setting front of heatmap
 plt.rcParams['font.sans-serif'] = 'Times New Roman '
 plt.rcParams.update({'font.size': 9})
 plt.tick_params(axis='both', which='both', length=0)
 """
+
+#add caption 
+# Add caption
+caption = f"{numerator} of {denominator}"
+plt.text(0.5, -0.1, caption, size=12, ha="center", transform=plt.gca().transAxes)
+
 #Draw the grid of strikezone
 for i in range(1, 8, 2):
     
-    plt.axhline(i, color='black', xmin = 1/8, xmax = 7/8,
+    plt.axhline(i, color='gray', xmin = 1/8, xmax = 7/8,
                 linewidth=2)
     plt.axvline(i, ymin = 1/8, ymax = 7/8, 
-            color ='black', linewidth=2) 
+            color ='gray', linewidth=2) 
     #上下分隔線
-    plt.axvline(x=4, ymin = 0, ymax = 1/8, color='black',linewidth=2)
-    plt.axvline(x=4, ymin = 7/8, ymax = 1, color='black',linewidth=2)
+    plt.axvline(x=4, ymin = 0, ymax = 1/8, color='gray',linewidth=2)
+    plt.axvline(x=4, ymin = 7/8, ymax = 1, color='gray',linewidth=2)
     #左右分隔線
-    plt.axhline(y=4, xmin = 0, xmax = 1/8, color='black',linewidth=2)
-    plt.axhline(y=4, xmin = 7/8, xmax = 1, color='black',linewidth=2)
+    plt.axhline(y=4, xmin = 0, xmax = 1/8, color='gray',linewidth=2)
+    plt.axhline(y=4, xmin = 7/8, xmax = 1, color='gray',linewidth=2)
     #upper and lower board line
-    plt.axhline(y=8, xmin = 0, xmax = 1, color='black',linewidth=4)
-    plt.axhline(y=0, xmin = 0, xmax = 1, color='black',linewidth=4)
+    plt.axhline(y=8, xmin = 0, xmax = 1, color='gray',linewidth=4)
+    plt.axhline(y=0, xmin = 0, xmax = 1, color='gray',linewidth=4)
     #left and right board line
-    plt.axvline(x=0, ymin = 0, ymax = 1, color='black',linewidth=4)
-    plt.axvline(x=8, ymin = 0, ymax = 1, color='black',linewidth=4)
+    plt.axvline(x=0, ymin = 0, ymax = 1, color='gray',linewidth=4)
+    plt.axvline(x=8, ymin = 0, ymax = 1, color='gray',linewidth=4)
 plt.show()
 #%%
