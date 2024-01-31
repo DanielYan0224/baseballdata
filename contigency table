@@ -33,12 +33,17 @@ df22 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv",
                     usecols=["stand", "pitch_type", "events",
                     "description", "zone"])
 
-# Extract rows with a specific pitch type (e.g., 'Slider')
+# Extract rows from contingency table
 selected_pitch_type = 'FC'
-selected_numerator_1 = 'called_strike'
-selected_numerator_2 = 'ball'
 
+study_set=["ball", "call_strike"]
+selected_numerator_1 = "ball"
 
+for i in range(len(study_set)):
+    selected_numerator_i = selected_numerator_1
+print(selected_numerator_2)
+
+#%%
 filtered_df22 =  df22[(df22['pitch_type'] == selected_pitch_type) & 
                     ((df22['description'] == selected_numerator_1) |
                     (df22["description"] == selected_numerator_2) )
