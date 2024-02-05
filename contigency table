@@ -29,7 +29,7 @@ def get_text_color(val, threshold=0.5):
     else:
         return 'white'
 
-df22 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv",
+df22 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data_2022.csv",
                     usecols=[ "pitch_type",
                     "description", "zone", "launch_speed_angle"])
 # Extract rows from contingency table
@@ -37,7 +37,7 @@ selected_pitch_type = 'FF'
 # Setting the index you want to study
 study_index = "launch_speed_angle"
 # Create the study set
-study_set = [6, 1, 2, 3, 4, 5]
+study_set = [3, 1, 2, 6, 4, 5]
 
 # Define the selected numerators from study set
 selected_numerators = {}
@@ -118,10 +118,6 @@ ratio_corres_lst = strikezone_2.copy()
 ratio = {key: CF(numerators_int[key], denominators_int[key]) for key in numerators_int}
 ratio_result = {int(key): round(float(value), 2) for key, value in ratio.items()}
 
-print(ratio_result)
-print(contingency_table)
-print(result)
-
 #convert strikezone to numbers
 for i in range(8):
     for j in range(8):
@@ -187,7 +183,7 @@ plt.tick_params(axis='both', which='both', length=0)
 
 
 # Add caption
-caption =  f"{selected_numerators[1]}, {selected_pitch_type}"
+caption =  f"{selected_numerators[1]}, {selected_pitch_type}, {22}"
 plt.text(0.5, -0.1, caption, size=12, ha="center", transform=plt.gca().transAxes)
 
 #Draw the grid of strikezone
@@ -239,14 +235,15 @@ def get_text_color(val, threshold=0.5):
     else:
         return 'white'
 
-df23 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2023.csv",
-                    usecols=["stand", "pitch_type", "events",
-                    "description", "zone"])
-
+df22 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data_2023.csv",
+                    usecols=[ "pitch_type",
+                    "description", "zone", "launch_speed_angle"])
 # Extract rows from contingency table
 selected_pitch_type = 'FF'
+# Setting the index you want to study
+study_index = "launch_speed_angle"
 # Create the study set
-study_set = ["swinging_strike", "hit_into_play", "foul"]
+study_set = [3, 1, 2, 6, 4, 5]
 
 # Define the selected numerators from study set
 selected_numerators = {}
@@ -254,15 +251,13 @@ for i, component in enumerate(study_set, start=1):
     selected_numerators[i] = component
 
 # Setting condition
-condition = (df23["pitch_type"] == selected_pitch_type) & df23["description"].isin(study_set)
+condition = (df22["pitch_type"] == selected_pitch_type) & df22[study_index].isin(study_set)
 
 # Combine conditions and filter the DataFrame
-filtered_df23 =  df23[condition]
+filtered_df22 =  df22[condition]
 
 # Create a contingency table with both descriptions
-contingency_table = pd.crosstab(filtered_df23['zone'], 
-    [filtered_df23['description'], filtered_df23['pitch_type']], 
-    margins=False)
+contingency_table = pd.crosstab(filtered_df22['zone'], [filtered_df22[study_index], filtered_df22['pitch_type']], margins=False)
 
 #Convert contingency table to data frame
 df = pd.DataFrame(contingency_table)
@@ -329,10 +324,6 @@ ratio_corres_lst = strikezone_2.copy()
 ratio = {key: CF(numerators_int[key], denominators_int[key]) for key in numerators_int}
 ratio_result = {int(key): round(float(value), 2) for key, value in ratio.items()}
 
-print(ratio_result)
-print(contingency_table)
-print(result)
-
 #convert strikezone to numbers
 for i in range(8):
     for j in range(8):
@@ -398,7 +389,7 @@ plt.tick_params(axis='both', which='both', length=0)
 
 
 # Add caption
-caption =  f"{selected_numerators[1]}, {selected_pitch_type}"
+caption =  f"{selected_numerators[1]}, {selected_pitch_type}, {23}"
 plt.text(0.5, -0.1, caption, size=12, ha="center", transform=plt.gca().transAxes)
 
 #Draw the grid of strikezone
@@ -423,5 +414,4 @@ for i in range(1, 8, 2):
 plt.show()
 
 print(contingency_table)
-print(selected_numerators[1])
 #%%                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 #%%
