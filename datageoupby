@@ -14,12 +14,31 @@ import collections
 from fractions import Fraction as F
 
 
-data2022 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data_2022.csv")
-data2023 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data_2023.csv")
+studyfactor = "launch_speed"
 
+# Read data from 2022 and 2023
+data2022 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv")
+data2023 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2023.csv")
+
+# Group by pitch_type and calculate mean launch angle for FF pitch type
 pitchtype2022 = data2022.groupby("pitch_type")
 pitchtype2023 = data2023.groupby("pitch_type")
 
-pitchtype2022.get_group("FC").groupby("zone").size()
-#ppitchtype2023.get_group("FC").groupby("zone").size()
+study2022 = (pitchtype2022.get_group("FF").groupby("zone")
+            .agg({studyfactor:"mean"}))
+
+study2023 = (pitchtype2023.get_group("FF").groupby("zone")
+            .agg({studyfactor:"mean"}))
+
+# Concatenate the DataFrames side by side
+study_combined = pd.concat([study2022, study2023], axis=1, keys=['2022', '2023'], names=['Year', 'Zone'])
+
+# Calculate mean launch angle for each year
+mean_launch_angle_2022 = study2022[studyfactor].mean()
+mean_launch_angle_2023 = study2023[studyfactor].mean()
+
+# Create DataFrame for mean launch angle of each year
+mean = pd.DataFrame({'2022': [mean_launch_angle_2022], '2023': [mean_launch_angle_2023]}, index=['Mean'])
+print(study_combined)
+print(mean)
 #%%

@@ -29,26 +29,29 @@ def get_text_color(val, threshold=0.5):
     else:
         return 'white'
 
-df22 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data_2022.csv",
+df22 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv",
                     usecols=[ "pitch_type",
                     "description", "zone", "launch_speed_angle"])
+
 # Extract rows from contingency table
 selected_pitch_type = 'FF'
 # Setting the index you want to study
 study_index = "launch_speed_angle"
 # Create the study set
-study_set = [3, 1, 2, 6, 4, 5]
+study_set_denumerator = [ 1, 2, 3, 4, 5, 6]
+study_set_numerator = [1,2]
 
 # Define the selected numerators from study set
-selected_numerators = {}
-for i, component in enumerate(study_set, start=1):
-    selected_numerators[i] = component
+study = {}
+for i, component in enumerate(study_set_denumerator, start=1):
+    study[i] = component
 
 # Setting condition
-condition = (df22["pitch_type"] == selected_pitch_type) & df22[study_index].isin(study_set)
+condition = (df22["pitch_type"] == selected_pitch_type) & df22[study_index].isin(study_set_denumerator)
 
 # Combine conditions and filter the DataFrame
 filtered_df22 =  df22[condition]
+
 
 # Create a contingency table with both descriptions
 contingency_table = pd.crosstab(filtered_df22['zone'], [filtered_df22[study_index], filtered_df22['pitch_type']], margins=False)
@@ -58,29 +61,39 @@ df = pd.DataFrame(contingency_table)
 
 # Convert DataFrame to a dictionary
 df_dict = df.to_dict()
-
+print(df_dict)
+print(contingency_table)
+#%%
 # Extract zone data 
 numerator = {}
 
-for i, component in enumerate(study_set, start=1):
+for i, component in enumerate(study_set_numerator, start=1):
     numerator[i] = df_dict[(component, selected_pitch_type)]
 
 # Create numerator list
-numerator_list = [numerator[i] for i in range(1, len(study_set) + 1)]
+numerator_list = [numerator[i] for i in range(1, len(study_set_numerator) + 1)]
 
-# Add all indexes
+print(numerator_list)
+
+#%%
+# Add denumerator
 result = {}
 for key in numerator[1]:
     result[key] = sum(d[key] for d in numerator_list)
-
+# Add numerator
+numerator
 # Complete all the keys
 target_keys = range(1, 15)
+
 # Complete dictionary with the values of newly added positions set to 0
-for i in range(1, len(study_set)):
+for i in range(1, len(study_set_numerator)):
     numerator[i] = {key: numerator[i].get(key, 0) for key in target_keys if key != 10}
 
-result  ={key: result.get(key, 0) for key in target_keys if key != 10}
+result  = {key: result.get(key, 0) for key in target_keys if key != 10}
+numerator = {key: numerator.get(key, 0) for key in target_keys if key != 10}
 
+
+--------------------------------------------------------
 # Define empty dictionaries
 #numbers = {}
 numerators ={}
