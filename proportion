@@ -1,0 +1,182 @@
+pip install matplotlib
+pip install seaborn
+pip install numpy
+pip install dash
+#%%
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import csv
+import fractions
+import itertools
+import collections
+from fractions import Fraction as F
+
+## Calculate the ratio under the condition of not swinging
+
+
+# Define F(0, 0) = 0
+def CF(numerator, denominator):
+    if denominator == 0:
+        return 0
+    else:
+        return F(numerator, denominator)
+    
+# Function to get contrasting text color based on background color
+def get_text_color(val, threshold=0.5):
+    if val < threshold:
+        return 'black'
+    else:
+        return 'white'
+
+df22 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv")
+# Classify the groups from df22
+df = df22
+# Setting the index you want to study
+study_index = "pitch_type"
+# Create the study set (分母) study_set_numerator (分子)
+study_set_den = df[study_index].unique().tolist()
+study_set_num = 'FF'
+
+
+##############
+# 定義條件集
+condition = {}
+for i, component in enumerate(study_set_den, start=1):
+    condition[i] = component
+filtered =  df22[study_index].isin(study_set_den)
+#(df22["pitch_type"]  == selected_pitch_type) &
+filtered_df22 = df22[filtered]
+
+# Create a contigency table of filtered_df22
+contingency_table = pd.crosstab(filtered_df22['zone'], [filtered_df22[study_index]], margins=1)
+
+# Convert contingency table to data frame 
+df22_ctable = pd.DataFrame(contingency_table)
+
+# Convert df_ctable to a dictionary 
+df22_dict = df22_ctable.to_dict()
+
+
+
+# Create an initial 8x8 matrix
+strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
+    [11, 1, 1, 2, 2, 3, 3, 12],
+    [11, 1, 1, 2, 2, 3, 3, 12],
+    [11, 4, 4, 5, 5, 6, 6, 12],
+    [13, 4, 4, 5, 5, 6, 6, 14],
+    [13, 7, 7, 8, 8, 9, 9, 14],
+    [13, 7, 7, 8, 8, 9, 9, 14],
+    [13, 13, 13, 13, 14, 14, 14, 14]]
+strikezone_2 = [[11, 11, 11, 11, 12, 12, 12, 12],
+    [11, 1, 1, 2, 2, 3, 3, 12],
+    [11, 1, 1, 2, 2, 3, 3, 12],
+    [11, 4, 4, 5, 5, 6, 6, 12],
+    [13, 4, 4, 5, 5, 6, 6, 14],
+    [13, 7, 7, 8, 8, 9, 9, 14],
+    [13, 7, 7, 8, 8, 9, 9, 14],
+    [13, 13, 13, 13, 14, 14, 14, 14]]
+numbers_corres_lst = strikezone_1.copy()
+ratio_corres_lst = strikezone_2.copy()
+
+numerators = df22_dict[study_set_num]
+denominators = df22_dict['All']
+
+ratio = {key: CF(numerators[key], denominators[key]) for key in numerators}
+del ratio['All']
+ratio_float = {int(key): round(float(value), 2) for key, value in ratio.items()}
+
+del numerators['All']
+numerators_int ={int(key): int(value) for key, value in numerators.items()}
+
+#convert strikezone to numbers
+for i in range(8):
+    for j in range(8):
+        numbers_corres_lst[i][j] = numerators_int[strikezone_1[i][j]]
+
+#convert strikezone to ratio
+for i in range(8):
+    for j in range(8):
+        ratio_corres_lst[i][j] = ratio_float[strikezone_2[i][j]]
+
+# 將ratio_corres_lst轉成ndarray再reshape 8*8 array
+ratio_corres_lst = np.reshape(np.c_[ratio_corres_lst],(8,8))
+#將numbers_corres_lst轉成ndarray再reshape 8*8 array
+numbers_corres_lst = np.reshape(np.c_[numbers_corres_lst],(8,8))
+
+#emerge ratio_corres_lst and numbers_corres_lst
+formatted_text = (np.asarray(["{0:.2f}\n ({1})".format( 
+    ratio_corres_lst, numbers_corres_lst) 
+    for ratio_corres_lst, numbers_corres_lst 
+    in zip(ratio_corres_lst.flatten(), numbers_corres_lst.flatten())])).reshape(8, 8) 
+
+
+# drawing heatmap 
+fig, ax = plt.subplots()
+ax = sns.heatmap(ratio_corres_lst, annot=False, fmt="", cmap="Reds", vmax=1, vmin=0)
+
+annotated_cells = [ (2, 1), (2, 3), (2, 5), 
+                (4, 1), (4, 3), (4, 5),
+                (6, 1), (6, 3), (6, 5)] 
+annotated_cells_boder =[(0, 0), (0, 7), (7, 0), (7, 7)]
+'''
+for i in range(ratio_corres_lst.shape[0]):
+    for j in range(ratio_corres_lst[1]):
+        for cell in annotated_cells_boder:
+    ax.text(cell[1] + 0.5, cell[0] + 0.5, 
+            formatted_text[cell[0], cell[1]], 
+            ha='center', va='center',  color=text_color,
+            fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
+'''
+# Annotate cells with formatted text
+for cell in annotated_cells:
+    value = ratio_corres_lst[cell[0], cell[1]]
+    text_color = get_text_color(value)
+
+    ax.text(cell[1] + 1, cell[0], formatted_text[cell[0], cell[1]],
+            ha='center', va='center', color=text_color,
+            fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
+
+for cell in annotated_cells_boder:
+    value = ratio_corres_lst[cell[0], cell[1]]
+    text_color = get_text_color(value)
+
+    ax.text(cell[1] + 0.5, cell[0] + 0.5, formatted_text[cell[0], cell[1]],
+            ha='center', va='center', color=text_color,
+            fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
+"""
+#setting front of heatmap
+plt.rcParams['font.sans-serif'] = 'Times New Roman '
+plt.rcParams.update({'font.size': 9})
+plt.tick_params(axis='both', which='both', length=0)
+"""
+
+'''
+# Add caption
+caption =  f"{study_set_num[1]}, {selected_pitch_type}, {22}"
+plt.text(0.5, -0.1, caption, size=12, ha="center", transform=plt.gca().transAxes)
+'''
+#Draw the grid of strikezone
+for i in range(1, 8, 2):
+    
+    plt.axhline(i, color='gray', xmin = 1/8, xmax = 7/8,
+                linewidth=2)
+    plt.axvline(i, ymin = 1/8, ymax = 7/8, 
+            color ='gray', linewidth=2) 
+    #上下分隔線
+    plt.axvline(x=4, ymin = 0, ymax = 1/8, color='gray',linewidth=2)
+    plt.axvline(x=4, ymin = 7/8, ymax = 1, color='gray',linewidth=2)
+    #左右分隔線
+    plt.axhline(y=4, xmin = 0, xmax = 1/8, color='gray',linewidth=2)
+    plt.axhline(y=4, xmin = 7/8, xmax = 1, color='gray',linewidth=2)
+    #upper and lower board line
+    plt.axhline(y=8, xmin = 0, xmax = 1, color='gray',linewidth=4)
+    plt.axhline(y=0, xmin = 0, xmax = 1, color='gray',linewidth=4)
+    #left and right board line
+    plt.axvline(x=0, ymin = 0, ymax = 1, color='gray',linewidth=4)
+    plt.axvline(x=8, ymin = 0, ymax = 1, color='gray',linewidth=4)
+plt.show()
+
+print(df22_ctable)
+#%%
