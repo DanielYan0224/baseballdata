@@ -24,20 +24,23 @@ def CF(numerator, denominator):
         return F(numerator, denominator)
     
 # Function to get contrasting text color based on background color
-def get_text_color(val, threshold=0.5):
+def get_text_color(val):
+    threshold = (max(ratio_float_list )+min(ratio_float_list )) / 2
     if val < threshold:
         return 'black'
     else:
         return 'white'
 
-df22 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv")
+df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv")
 # Classify the groups from df22
-df = df22
+df22 = df.groupby("pitch_type").get_group('FC')
+
+
 # Setting the index you want to study
-study_index = "pitch_type"
+study_index = "events"
 # Create the study set (分母) study_set_numerator (分子)
-study_set_den = df[study_index].unique().tolist()
-study_set_num = 'FF'
+study_set_den = df22[study_index].unique().tolist()
+study_set_num = 'field_out'
 
 
 ##############
@@ -57,8 +60,6 @@ df22_ctable = pd.DataFrame(contingency_table)
 
 # Convert df_ctable to a dictionary 
 df22_dict = df22_ctable.to_dict()
-
-
 
 # Create an initial 8x8 matrix
 strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
@@ -83,11 +84,19 @@ ratio_corres_lst = strikezone_2.copy()
 numerators = df22_dict[study_set_num]
 denominators = df22_dict['All']
 
+# Complete all the keys
+keys = range(1, 15)
+denominators = {key: denominators.get(key,0) for key in keys if key != 10}
+numerators = {key: numerators.get(key,0) for key in keys if key != 10}
+
 ratio = {key: CF(numerators[key], denominators[key]) for key in numerators}
-del ratio['All']
 ratio_float = {int(key): round(float(value), 2) for key, value in ratio.items()}
 
-del numerators['All']
+# Convert ratio float to float 
+ratio_float_list = list(ratio_float.values())
+
+
+#del numerators['All']
 numerators_int ={int(key): int(value) for key, value in numerators.items()}
 
 #convert strikezone to numbers
@@ -105,6 +114,7 @@ ratio_corres_lst = np.reshape(np.c_[ratio_corres_lst],(8,8))
 #將numbers_corres_lst轉成ndarray再reshape 8*8 array
 numbers_corres_lst = np.reshape(np.c_[numbers_corres_lst],(8,8))
 
+
 #emerge ratio_corres_lst and numbers_corres_lst
 formatted_text = (np.asarray(["{0:.2f}\n ({1})".format( 
     ratio_corres_lst, numbers_corres_lst) 
@@ -114,7 +124,7 @@ formatted_text = (np.asarray(["{0:.2f}\n ({1})".format(
 
 # drawing heatmap 
 fig, ax = plt.subplots()
-ax = sns.heatmap(ratio_corres_lst, annot=False, fmt="", cmap="Reds", vmax=1, vmin=0)
+ax = sns.heatmap(ratio_corres_lst, annot=False, fmt="", cmap="Reds")
 
 annotated_cells = [ (2, 1), (2, 3), (2, 5), 
                 (4, 1), (4, 3), (4, 5),
@@ -152,11 +162,9 @@ plt.rcParams.update({'font.size': 9})
 plt.tick_params(axis='both', which='both', length=0)
 """
 
-'''
-# Add caption
-caption =  f"{study_set_num[1]}, {selected_pitch_type}, {22}"
+caption =  f"{study_set_num} / {study_index}={df22_dict[study_set_num]['All']}/{df22_dict['All']['All']}, 22"
 plt.text(0.5, -0.1, caption, size=12, ha="center", transform=plt.gca().transAxes)
-'''
+
 #Draw the grid of strikezone
 for i in range(1, 8, 2):
     
@@ -180,3 +188,12 @@ plt.show()
 
 print(df22_ctable)
 #%%
+from fractions import Fraction
+
+# Create a fraction without automatic reduction
+my_fraction = Fraction(df22_dict[study_set_num]['All'], df22_dict['All']['All'])
+
+print(f"{study_index}")  # Output: 6/9
+
+#%%
+
