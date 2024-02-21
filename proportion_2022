@@ -94,7 +94,7 @@ keys = range(1, 15)
 denominators = {key: denominators.get(key,0) for key in keys if key != 10}
 numerators = {key: numerators.get(key,0) for key in keys if key != 10}
 
-ratio = {key: CF(numerators[key], sum_of_study_set_num.to_dict()['All']) for key in numerators}
+ratio = {key: CF(numerators[key], denominators[key]) for key in numerators}
 ratio_float = {int(key): round(float(value), 2) for key, value in ratio.items()}
 
 # Convert ratio float to float 
