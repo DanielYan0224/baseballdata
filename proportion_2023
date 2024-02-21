@@ -33,15 +33,14 @@ def get_text_color(val):
 
 df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2023.csv")
 # Classify the groups from df23
-df23 = df.groupby("pitch_type").get_group('FF')
-
+df23 = (df.groupby('pitch_type').get_group('FF'))
 
 # Setting the index you want to study
-study_index = "events"
+year = '2023'
+study_index = "description"
 # Create the study set (分母) study_set_numerator (分子)
-study_set_num = ['strikeout']
+study_set_num = ['hit_into_play']
 study_set_den = df23[study_index].unique().tolist()
-
 
 
 ##############
@@ -88,14 +87,13 @@ sum_of_study_set_num = df23_ctable[study_set_num].sum(axis =1)
 #del sum_of_study_set_num['All']
 numerators = sum_of_study_set_num.to_dict()
 denominators = df23_dict['All']
-print(sum_of_study_set_num)
 
 # Complete all the keys
 keys = range(1, 15)
 denominators = {key: denominators.get(key,0) for key in keys if key != 10}
 numerators = {key: numerators.get(key,0) for key in keys if key != 10}
 
-ratio = {key: CF(numerators[key],sum_of_study_set_num.to_dict()['All']) for key in numerators}
+ratio = {key: CF(numerators[key],denominators[key]) for key in numerators}
 ratio_float = {int(key): round(float(value), 2) for key, value in ratio.items()}
 
 # Convert ratio float to float 
@@ -162,7 +160,7 @@ for cell in annotated_cells_boder:
             fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
     
 result = sum_of_study_set_num['All'] / df23_dict['All']['All']
-caption = f"{sum_of_study_set_num['All']}/{df23_dict['All']['All']} ({result:.2f}), 23"
+caption = f"{sum_of_study_set_num['All']}/{df23_dict['All']['All']} ({result:.2f}), {year}"
 plt.text(0.5, -0.1, caption, size=12, ha="center", transform=plt.gca().transAxes)
 
 # Draw the grid of strikezone
