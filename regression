@@ -1,0 +1,48 @@
+
+#%%
+pip install numpy matplotlib scikit-learn
+#%%
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
+
+# Load your dataset (replace 'data.csv' with your actual file name)
+df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data19_23.csv")
+
+# Fill NaN values with 0
+df.fillna(0, inplace=True)
+
+# Select two columns for regression analysis
+x_column = 'release_speed'  # Replace with the column you want on the x-axis
+y_column = 'release_pos_x'   # Replace with the column you want on the y-axis
+
+# Extract the selected columns as numpy arrays
+x = df[x_column].values.reshape(-1, 1)
+y = df[y_column].values
+
+# Add a constant term to the predictor variable for the intercept
+x = sm.add_constant(x)
+
+# Fit the linear regression model
+model = sm.OLS(y, x).fit()
+
+# Print regression equation, R^2, and p-value
+print("Regression Equation:")
+print(f"{y_column} = {model.params[0]:.2f} + {model.params[1]:.2f} * {x_column}")
+print("\nR-squared:", model.rsquared)
+print("\nP-value for the coefficient of", x_column, ":", model.pvalues[1])
+
+# Predict y values
+y_pred = model.predict(x)
+
+# Plot the data and the linear regression line
+plt.scatter(df[x_column], df[y_column], color='blue', label='Data')
+plt.plot(df[x_column], y_pred, color='red', label='Linear Regression')
+plt.xlabel(x_column)
+plt.ylabel(y_column)
+plt.title('Linear Regression Analysis')
+plt.legend()
+plt.show()
+ #%%
