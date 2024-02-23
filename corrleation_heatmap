@@ -15,12 +15,15 @@ numeric_columns = ['avg_hit_angle',	'anglesweetspotpercent',
 ]
 numeric_df = df[numeric_columns]
 
-# Calculate the correlation matrix
+# calculate correlation matrix
 correlation_matrix = numeric_df.corr()
 
-# Plot the heatmap
+# plot heatmap 
 plt.figure(figsize=(10, 8))
-sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+heatmap = sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+
+heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation=45, ha='right')
+
 plt.title('Heatmap Correlation Matrix')
 plt.show()
 #%%
