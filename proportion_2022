@@ -31,17 +31,23 @@ def get_text_color(val):
     else:
         return 'white'
 
-df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv")
+df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\meregedspdata_2022_min=1500.csv")
 # Classify the groups from df22
-df22 = df.groupby("pitch_type").get_group('FF')
+df22 = (df.groupby('pitch_type').get_group('FF'))
 
+limited_index = 'release_spin_rate'
+Min_number_of_limited_index = 2100
+limited = '<='
+
+
+df22 = df22[eval(f"df22['{limited_index}'] {limited} {Min_number_of_limited_index}")]
 
 # Setting the index you want to study
-study_index = "events"
+year = '2022'
+study_index = "description"
 # Create the study set (分母) study_set_numerator (分子)
-study_set_num = ['strikeout']
+study_set_num = ['swinging_strike']
 study_set_den = df22[study_index].unique().tolist()
-
 
 
 ##############
@@ -54,7 +60,8 @@ filtered =  df22[study_index].isin(study_set_den)
 filtered_df22 = df22[filtered]
 
 # Create a contigency table of filtered_df22
-contingency_table = pd.crosstab(filtered_df22['zone'], [filtered_df22[study_index]], margins=1)
+contingency_table = pd.crosstab(filtered_df22['zone'],\
+[filtered_df22[study_index]], margins=1)
 
 # Convert contingency table to data frame 
 df22_ctable = pd.DataFrame(contingency_table)
@@ -94,7 +101,7 @@ keys = range(1, 15)
 denominators = {key: denominators.get(key,0) for key in keys if key != 10}
 numerators = {key: numerators.get(key,0) for key in keys if key != 10}
 
-ratio = {key: CF(numerators[key], denominators[key]) for key in numerators}
+ratio = {key: CF(numerators[key],denominators[key]) for key in numerators}
 ratio_float = {int(key): round(float(value), 2) for key, value in ratio.items()}
 
 # Convert ratio float to float 
@@ -159,13 +166,13 @@ for cell in annotated_cells_boder:
     ax.text(cell[1] + 0.5, cell[0] + 0.5, formatted_text[cell[0], cell[1]],
             ha='center', va='center', color=text_color,
             fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
-
+    
 result = sum_of_study_set_num['All'] / df22_dict['All']['All']
-caption = f"{sum_of_study_set_num['All']}/{df22_dict['All']['All']} ({result:.2f}), 22"
-#f"{sum_of_study_set_num['All']}/{df22_dict['All']['All']}, 22" 
-
-plt.text(0.5, -0.1, caption, size=12, ha="center", transform=plt.gca().transAxes)
-
+caption =f"{limited_index} {limited } {Min_number_of_limited_index}"
+num_caption = f"{sum_of_study_set_num['All']}/{df22_dict['All']['All']} ({result:.2f})"
+plt.text(0.5, 1.05, year, size=12, ha="center", transform=plt.gca().transAxes)
+plt.text(0.5, -0.125, caption, size=10, ha="center", transform=plt.gca().transAxes)
+plt.text(0.5,-0.2, num_caption, size=10, ha='center', va='bottom', transform=plt.gca().transAxes)
 # Draw the grid of strikezone
 for i in range(1, 8, 2):
     
