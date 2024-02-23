@@ -1,0 +1,26 @@
+#%%
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Assuming df is your DataFrame with the data
+# You may need to preprocess your data to select only numeric columns
+# For demonstration purposes, let's assume you have selected relevant numeric columns
+df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\2023brls.csv")
+
+# Create a DataFrame with selected numeric columns
+numeric_columns = ['avg_hit_angle',	'anglesweetspotpercent',	
+'max_hit_speed', 'avg_hit_speed', 'ev50', 'fbld', 'gb', 'max_distance', 'avg_distance',
+'avg_hr_distance', 'ev95percent', 'brl_percent', 'brl_pa'
+]
+numeric_df = df[numeric_columns]
+
+# Calculate the correlation matrix
+correlation_matrix = numeric_df.corr()
+
+# Plot the heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+plt.title('Heatmap Correlation Matrix')
+plt.show()
+#%%
