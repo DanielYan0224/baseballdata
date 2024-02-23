@@ -31,15 +31,22 @@ def get_text_color(val):
     else:
         return 'white'
 
-df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2023.csv")
+df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\meregedspdata_2023_min=1500.csv")
 # Classify the groups from df23
 df23 = (df.groupby('pitch_type').get_group('FF'))
+
+limited_index = 'release_spin_rate'
+Min_number_of_limited_index = 2100
+limited = '<='
+
+
+df23 = df23[eval(f"df23['{limited_index}'] {limited} {Min_number_of_limited_index}")]
 
 # Setting the index you want to study
 year = '2023'
 study_index = "description"
 # Create the study set (分母) study_set_numerator (分子)
-study_set_num = ['hit_into_play']
+study_set_num = ['swinging_strike']
 study_set_den = df23[study_index].unique().tolist()
 
 
@@ -160,9 +167,11 @@ for cell in annotated_cells_boder:
             fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
     
 result = sum_of_study_set_num['All'] / df23_dict['All']['All']
-caption = f"{sum_of_study_set_num['All']}/{df23_dict['All']['All']} ({result:.2f}), {year}"
-plt.text(0.5, -0.1, caption, size=12, ha="center", transform=plt.gca().transAxes)
-
+caption =f"{limited_index} {limited } {Min_number_of_limited_index}"
+num_caption = f"{sum_of_study_set_num['All']}/{df23_dict['All']['All']} ({result:.2f})"
+plt.text(0.5, 1.05, year, size=12, ha="center", transform=plt.gca().transAxes)
+plt.text(0.5, -0.125, caption, size=10, ha="center", transform=plt.gca().transAxes)
+plt.text(0.5,-0.2, num_caption, size=10, ha='center', va='bottom', transform=plt.gca().transAxes)
 # Draw the grid of strikezone
 for i in range(1, 8, 2):
     
