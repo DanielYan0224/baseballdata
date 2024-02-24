@@ -1,0 +1,46 @@
+pip install matplotlib
+pip install seaborn
+pip install numpy
+pip install dash
+#%%
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import csv
+import fractions
+import itertools
+import collections
+from fractions import Fraction as F
+
+
+df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\meregedspdata_2022_min=1500.csv")
+df_speed_describe = df['effective_speed'].describe()
+print(df_speed_describe)
+data = df['effective_speed']
+
+# Plot the box digram
+sns.boxplot(data=df['effective_speed'])
+plt.xlabel('Features')
+plt.ylabel('Value')
+plt.title('Box Plot')
+plt.grid(True)
+plt.show()
+
+s = pd.Series(df['effective_speed'])
+Q1 = s.quantile(0.25)
+Q3 = s.quantile(0.75)
+IQR = Q3-Q1
+
+#filtered_data = data[data > Q3 + 1.5 *IQR]
+filtered_data = data[data > Q1 - 1.5*IQR]
+#filtered_data = data[data > 0]
+
+sns.boxplot(data=filtered_data)
+plt.xlabel('Features')
+plt.ylabel('Value')
+plt.title('Box Plot')
+plt.grid(True)
+plt.show()
+
+#%%
