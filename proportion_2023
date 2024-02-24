@@ -31,25 +31,36 @@ def get_text_color(val):
     else:
         return 'white'
 
-df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\meregedspdata_2023_min=1500.csv")
+df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\meregedspdata_2022_min=1500.csv")
 # Classify the groups from df23
-df23 = (df.groupby('pitch_type').get_group('FF'))
+df23 = df.groupby('pitch_type').get_group('FF')
 
+########################################
+# Selected zone
 limited_index = 'release_spin_rate'
 Min_number_of_limited_index = 2100
 limited = '<='
-
-
-df23 = df23[eval(f"df23['{limited_index}'] {limited} {Min_number_of_limited_index}")]
-
 # Setting the index you want to study
 year = '2023'
 study_index = "description"
 # Create the study set (分母) study_set_numerator (分子)
 study_set_num = ['swinging_strike']
+########################################
+
+########################################
+# Exploatory Data
+Q1 = df23[limited_index].quantile(0.25)
+Q3 = df23[limited_index].quantile(0.75)
+IQR = Q3-Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+df23 = df23[(df23[limited_index] >= lower_bound)\
+            & (df23[limited_index] <= upper_bound)]
 study_set_den = df23[study_index].unique().tolist()
+df23 = df23[eval(f"df23['{limited_index}'] {limited} {Min_number_of_limited_index}")]
 
-
+#%%
 ##############
 # 定義條件集
 condition = {}
