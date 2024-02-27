@@ -1,0 +1,53 @@
+pip install matplotlib
+pip install seaborn
+pip install numpy
+pip install dash
+#%%
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import csv
+import fractions
+import itertools
+import collections
+from fractions import Fraction as F
+
+
+df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\meregedspdata_2022_min=1500.csv")
+df_speed_describe = df['release_spin_rate'].describe()
+print(df_speed_describe)
+limited_index = 'release_spin_rate'
+data = df.groupby('pitch_type').get_group('FF')
+data = df['release_spin_rate']
+
+# Plot the box digram
+sns.boxplot(data=df['release_spin_rate'])
+plt.xlabel('Features')
+plt.ylabel('Value')
+plt.title('Box Plot')
+plt.grid(True)
+plt.show()
+
+s = pd.Series(df['release_spin_rate'])
+Q1 = s.quantile(0.25)
+Q3 = s.quantile(0.75)
+IQR = Q3-Q1
+Q1 = data.quantile(0.25)
+Q3 = data.quantile(0.75)
+IQR = Q3-Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+filtered_data = data[(data >= lower_bound)\
+            & (data <= upper_bound)]
+#filtered_data = data[data > 0]
+
+sns.boxplot(data=filtered_data)
+plt.xlabel('Features')
+plt.ylabel('Value')
+plt.title('Box Plot')
+plt.grid(True)
+plt.show()
+
+#%%

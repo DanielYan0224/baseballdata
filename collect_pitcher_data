@@ -1,4 +1,3 @@
-#%%
 #pip --version # 檢查使用版本
 pip install pybaseball
 pip3 install pybaseball # 如果檢查到的版本是使用 2.x 版的 Python
