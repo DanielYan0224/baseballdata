@@ -31,20 +31,21 @@ def get_text_color(val):
     else:
         return 'white'
 
-df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\meregedspdata_2022_min=1500.csv")
+df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\merged_batter_stra_2023.csv")
 # Classify the groups from df23
 df23 = df.groupby('pitch_type').get_group('FF')
 
+
 ########################################
 # Selected zone
-limited_index = 'release_spin_rate'
-Min_number_of_limited_index = 2100
-limited = '<='
+limited_index = 'release_speed'
+Min_number_of_limited_index = 0
+limited = '>'
 # Setting the index you want to study
 year = '2023'
-study_index = "description"
+study_index = "events"
 # Create the study set (分母) study_set_numerator (分子)
-study_set_num = ['swinging_strike']
+study_set_num = ['field_out']
 ########################################
 
 ########################################
@@ -60,7 +61,7 @@ df23 = df23[(df23[limited_index] >= lower_bound)\
 study_set_den = df23[study_index].unique().tolist()
 df23 = df23[eval(f"df23['{limited_index}'] {limited} {Min_number_of_limited_index}")]
 
-#%%
+
 ##############
 # 定義條件集
 condition = {}
