@@ -50,5 +50,3 @@ fig.write_html('scatter_plot.html', auto_open=True)
 
 
 #%%
-
-#%%
