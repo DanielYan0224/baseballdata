@@ -1,0 +1,102 @@
+#%%
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Assuming df is your DataFrame with the data
+# You may need to preprocess your data to select only numeric columns
+# For demonstration purposes, let's assume you have selected relevant numeric columns
+df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2023.csv")
+year = '2023'
+
+df = df.groupby("pitch_type").get_group("FF")
+# Create a DataFrame with selected numeric columns
+numeric_columns = ['hit_distance_sc', 'estimated_woba_using_speedangle','woba_value',\
+'launch_speed', 'launch_angle', 'plate_x', 'plate_z',\
+'effective_speed', 'release_speed'                
+]
+numeric_df = df[numeric_columns]
+
+# calculate correlation matrix
+correlation_matrix = numeric_df.corr()
+
+# plot heatmap 
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
+plt.title(year)
+plt.xticks(rotation=45, ha='right')
+plt.show()
+#%%
+
+
+
+
+####################################
+#%%
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import csv
+import fractions
+import itertools
+import collections
+from fractions import Fraction as F
+
+df23 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2023.csv")
+df22 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2022.csv")
+
+# Add a 'year' column to each DataFrame
+df22.insert(1, 'year', 2022)  # Use integer for year for better sorting/ordering
+df23.insert(1, 'year', 2023)
+
+study_index = 'launch_speed'
+# Concatenate the two DataFrames and reset the index to ensure uniqueness
+merged_data = pd.concat([df22, df23], axis=0).reset_index(drop=True)
+
+# Filter for 'FF' pitch_type
+merged_data_ff = merged_data[merged_data['pitch_type'] == 'FF']
+
+
+print(df22[study_index].describe())
+print(df23[study_index].describe())
+# Plotting
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='year', y=study_index, data=merged_data)
+plt.title(f'{study_index} Distribution by Year')
+plt.xlabel('Year')
+plt.ylabel(study_index)
+plt.show()
+#%%
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import csv
+import fractions
+import itertools
+import collections
+from fractions import Fraction as F
+
+df23 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2023.csv")
+df22 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2022.csv")
+
+# Add a 'year' column to each DataFrame
+df22.insert(1, 'year', 2022)  # Use integer for year for better sorting/ordering
+df23.insert(1, 'year', 2023)
+
+study_index = 'launch_angle'
+# Concatenate the two DataFrames and reset the index to ensure uniqueness
+merged_data = pd.concat([df22, df23], axis=0).reset_index(drop=True)
+merged_data = merged_data[merged_data['pitch_type'] == 'FF']
+print(merged_data.groupby('year')[study_index].describe()) 
+
+# Plotting
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='year', y=study_index, data=merged_data)
+plt.title(f'{study_index} Distribution by Year')
+plt.xlabel('Year')
+plt.ylabel(study_index)
+plt.show()
+#%%
+

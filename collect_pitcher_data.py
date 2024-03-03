@@ -5,12 +5,13 @@ pip install seaborn
 # %%
 from pybaseball import playerid_lookup
 from pybaseball import statcast_pitcher
+from pybaseball import statcast_batter
 import pandas as pd
 
 merged_df = pd.DataFrame()
 
 # Load your dataset
-df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\test.csv")
+df = pd.read_csv(r"C:\Users\閻天立\Downloads\2022_batter_oppo.csv")
 
 # Fill NaN values with 0
 df.fillna(0, inplace=True)
@@ -23,16 +24,15 @@ dfs = []
 # Iterate over each player ID and fetch data
 for player_id in id:
     pitcher_data = statcast_pitcher(
-        start_dt="2023-03-29", end_dt="2023-09-27",
+        start_dt="2022-04-07", end_dt="2022-11-05",
         player_id=player_id)
     dfs.append(pitcher_data)
 
 # Concatenate the DataFrames along the rows 
 merged_df = pd.concat(dfs, axis=0)
 
-#%%
 import pandas as pd
-merged_df.to_csv(r"C:\Users\user\Desktop\baseballdata\merge.csv")
+merged_df.to_csv(r"C:\Users\閻天立\Desktop\pybaseball\2022_batter_oppo.csv")
 
 
 
