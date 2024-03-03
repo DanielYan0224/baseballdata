@@ -17,27 +17,32 @@ from fractions import Fraction as F
 def get_text_color(val):
     threshold = (max(zone_means)+min(zone_means)) / 2
     if val < threshold:
-        return 'black'
-    else:
         return 'white'
+    else:
+        return 'black'
 
-df1 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2023.csv")
-df2 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2022.csv")
+df1 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\543037_2023_stra.csv")
+df2 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\543037_2022_stra.csv")
 
 # Add a 'year' column to each DataFrame
 df1.insert(1, 'year', 2023)  # Use integer for year for better sorting/ordering
 df2.insert(1, 'year', 2022)
 
 df = pd.concat([df1, df2], axis=0).reset_index(drop=True)
-df = df[df['pitch_type'] == 'FF']
+df = df
 
 year = 2023
 
 df = df[df['year'] == year]
 # Assuming 'df' is your DataFrame and 'zone' and 'hit_distance_sc' are columns in it.
-study_index = 'launch_angle'
+study_index = 'hit_distance_sc'
 zone_study = df.groupby('zone')[study_index]\
     .apply(list).to_dict()
+# 將NaN值替換為0
+df = df.fillna(0)
+
+# 計算每列的平均值，此時NaN已被視作0
+mean = df[study_index].mean()
 
 zone_means = {zone: round(sum(0 if np.isnan(value) else value for value in distances)\
 / len(distances), 2) for zone, distances in zone_study.items()}
@@ -107,7 +112,9 @@ for cell in annotated_cells_boder:
             ha='center', va='center', color=text_color,
             fontdict={'family': 'Times New Roman', 'size': 12, 'weight': 'bold'})
 
+caption = f'{study_index}={mean:.2f}'
 plt.text(0.5, 1.05, year, size=12, ha="center", transform=plt.gca().transAxes)
+plt.text(0.5, -0.125, caption, size=10, ha="center", transform=plt.gca().transAxes)
 
 for i in range(1, 8, 2):
     
@@ -131,5 +138,22 @@ plt.show()
 
 print(df)
 #%%
+import pandas as pd
+import pandas as pd
+import numpy as np
+
+# Example DataFrame with NaN values
+data = {
+    'Column1': [1, np.nan, 3, 4],
+    'Column2': [2, 3, np.nan, 5],
+    'Column3': [np.nan, np.nan, np.nan, 1]
+}
+
+df = pd.DataFrame(data)
+
+# Count the number of NaN values in each column
+nan_counts = df.isna().sum()
+
+print(nan_counts)
 
 #%%
