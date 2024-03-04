@@ -15,40 +15,43 @@ from fractions import Fraction as F
 
 # Function to get contrasting text color based on background color
 def get_text_color(val):
-    threshold = (max(zone_means)+min(zone_means)) / 2
-    if val < threshold:
+    threshold = (max(zone_means.values())+min(zone_means.values())) / 3
+    if val > threshold:
         return 'white'
     else:
         return 'black'
 
-df1 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\543037_2023_stra.csv")
-df2 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\543037_2022_stra.csv")
-
+df1 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2023.csv")
+df2 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2022.csv")
+df3 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2019.csv")
+df4 = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2018.csv")
 # Add a 'year' column to each DataFrame
 df1.insert(1, 'year', 2023)  # Use integer for year for better sorting/ordering
 df2.insert(1, 'year', 2022)
+df3.insert(1, 'year', 2019)
+df4.insert(1, 'year', 2018)
 
-df = pd.concat([df1, df2], axis=0).reset_index(drop=True)
-df = df
+df = pd.concat([df1, df2, df3, df4], axis=0).reset_index(drop=True)
+df = df[df['pitch_type'] == 'FF']
 
 year = 2023
 
 df = df[df['year'] == year]
-# Assuming 'df' is your DataFrame and 'zone' and 'hit_distance_sc' are columns in it.
-study_index = 'hit_distance_sc'
+
+study_index = 'launch_angle'
 zone_study = df.groupby('zone')[study_index]\
     .apply(list).to_dict()
 # 將NaN值替換為0
-df = df.fillna(0)
+#df = df.fillna(0)
 
-# 計算每列的平均值，此時NaN已被視作0
 mean = df[study_index].mean()
 
-zone_means = {zone: round(sum(0 if np.isnan(value) else value for value in distances)\
-/ len(distances), 2) for zone, distances in zone_study.items()}
+zone_means = {zone: np.nanmean(values) for zone, values in zone_study.items()}
+zone_counts = {zone: len([value for value in zone_study if not pd.isna(value)]) for zone, value in zone_study.items()}
 
-zone_counts = {zone: len([value for value in distances if not pd.isna(value)]) for zone, distances in zone_study.items()}
-
+keys = range(1, 15)
+zone_means = {key: zone_means.get(key,0) for key in keys if key != 10}
+zone_counts = {key: zone_counts.get(key,0) for key in keys if key != 10}
 # Create an initial 8x8 matrix
 strikezone_1 = [[11, 11, 11, 11, 12, 12, 12, 12],
     [11, 1, 1, 2, 2, 3, 3, 12],

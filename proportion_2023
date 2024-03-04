@@ -31,7 +31,7 @@ def get_text_color(val):
     else:
         return 'white'
 
-df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\merged_batter_stra_2023.csv")
+df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\543037_2023_pull.csv")
 # Classify the groups from df23
 df23 = df.groupby('pitch_type').get_group('FF')
 
