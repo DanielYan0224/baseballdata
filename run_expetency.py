@@ -18,6 +18,12 @@ grouped_run_exp = simplified_data.groupby(['outs_when_up', 'base_state'])['delta
 # 顯示計算結果
 grouped_run_exp
 
+# 將數據轉換為表格形式
+pivot_table_run_exp = grouped_run_exp.pivot(index='base_state', columns='outs_when_up', values='delta_run_exp')
+
+# 顯示轉換後的表格
+pivot_table_run_exp
+
 
 
 #%%
