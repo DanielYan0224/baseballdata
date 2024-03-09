@@ -12,7 +12,7 @@ import fractions
 import itertools
 import collections
 from fractions import Fraction as F
-
+import re
 ## Calculate the ratio under the condition of not swinging
 
 
@@ -30,8 +30,8 @@ def get_text_color(val):
         return 'black'
     else:
         return 'white'
-
-df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\543037_2023_pull.csv")
+file_path = r"C:\Users\閻天立\Desktop\pybaseball\data2019.csv"
+df = pd.read_csv(file_path)
 # Classify the groups from df23
 df23 = df.groupby('pitch_type').get_group('FF')
 
@@ -42,10 +42,12 @@ limited_index = 'release_speed'
 Min_number_of_limited_index = 0
 limited = '>'
 # Setting the index you want to study
-year = '2023'
+match = re.search(r'data(\d+).csv', file_path)
+year = match.group(1)
+
 study_index = "events"
 # Create the study set (分母) study_set_numerator (分子)
-study_set_num = ['field_out']
+study_set_num = ['single', 'double', 'home_run']
 ########################################
 
 ########################################
