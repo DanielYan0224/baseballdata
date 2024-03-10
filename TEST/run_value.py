@@ -1,94 +1,79 @@
 #%%
 import pandas as pd
 import numpy as np
-from datetime import datetime
-import matplotlib.pyplot as plt
 
-df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2019.csv")
+def run_expectancy_table(df):
+    # Filter for final pitches in at-bats and innings less than 9
+    filtered_df = df[(df['final_pitch_at_bat'] == 1) & (df['inning'] < 9)]
+    # Group by base_out_state, calculate mean runs_to_end_inning, and sort
+    re_table = (filtered_df.groupby('base_out_state', as_index=False)
+                .agg(avg_re=('runs_to_end_inning', 'mean'))
+                .sort_values(by='avg_re', ascending=False))
+        
+df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\rv.csv")
+# df = df.head()
 
-#def run_expectancy(df, level='plate appearence'):
+df = df.sort_values(by=['game_pk', 'at_bat_number', 'pitch_number'])
+df['final_pitch_game'] = np.where(df.groupby('game_pk')['pitch_number'].transform('max') == df['pitch_number'], 1, 0)
 
-# 排序
-df.sort_values(by = ['game_pk', 'at_bat_number', 'pitch_number'], inplace=True)
+df = df.sort_values(by=['game_pk', 'inning_topbot', 'at_bat_number', 'pitch_number'])
+df['runs_scored_on_pitch'] = df['des'].str.count("scores")
+df['runs_scored_on_pitch'] = np.where(df['events'] == "home_run", df['runs_scored_on_pitch'] + 1, df['runs_scored_on_pitch'])
+df['bat_score_after'] = df['bat_score'] + df['runs_scored_on_pitch']
 
-# last pitch per game
-df['final_pitch_game'] = df.groupby('game_pk')\
-['pitch_number'].transform(lambda x: (x == x.max()).astype(int))
+df['final_pitch_at_bat'] = np.where(df.groupby(['game_pk', 'at_bat_number'])['pitch_number'].transform('max') == df['pitch_number'], 1, 0)
+df['final_pitch_inning'] = np.where((df['final_pitch_at_bat'] == 1) & (df['inning_topbot'] != df['inning_topbot'].shift(-1)), 1, 0)
+df['final_pitch_inning'] = np.where(df['final_pitch_inning'].isna(), 1, df['final_pitch_inning'])
 
-# last pitch per at bat
-df['final_pitch_at_bat'] = df.groupby(['game_pk', 'at_bat_number', 'inning_topbot'])\
-['pitch_number'].transform(lambda x: (x == x.max()).astype(int))
 
-# last pitch per inning_topbot
-df['final_pitch_inning'] = 0
-df.loc[(df['final_pitch_at_bat'] == 1) & (df['inning_topbot'] \
-!= df.groupby(['game_pk', 'inning_topbot'])['inning_topbot'].shift(-1)), \
-'final_pitch_inning'] = 1
-df['final_pitch_inning'].fillna(1, inplace=True)
 
-# Calculate the score resulting from each pitch.
-df['runs_score_on_pitch'] = df['des'].str.count("scores")
-df.loc[df['events'] == 'home_run', 'runs_score_on_pitch'] += 1
-df['bat_score_after'] = df['bat_score'] + df['runs_score_on_pitch']
+df['bat_score_start_inning'] = df.groupby(['game_pk', 'inning', 'inning_topbot'])['bat_score'].transform('min')
+df['bat_score_end_inning'] = df.groupby(['game_pk', 'inning', 'inning_topbot'])['bat_score'].transform('max')
+df['cum_runs_in_inning'] = df.groupby(['game_pk', 'inning', 'inning_topbot'])['runs_scored_on_pitch'].cumsum()
+df['runs_to_end_inning'] = df['bat_score_end_inning'] - df['bat_score']
 
-# Calculate accumlated socres per innings
-df['score_start_inning'] = df.groupby(['gmae_pk', 'inning', 'inning_topbot'])['bat_score'].transform('minimun')
-df['score_end_inning'] = df.groupby(['gmae_pk', 'inning', 'inning_topbot'])['bat_score'].transform('maximum')
-df['cum_runs_in_inning'] = df.groupby(['game_pk', 'inning', 'inning_topbot']).cumsum()['runs_score_on_pitch']
-df['runs_to_end_inning'] = df['score_end_inning'] - df['score']
+df['base_out_state'] = df.apply(lambda row: f"{row['outs_when_up']} outs, " +
+    ("1b" if pd.notna(row['on_1b']) else "__") + ", " +
+    ("2b" if pd.notna(row['on_2b']) else "__") + ", " +
+    ("3b" if pd.notna(row['on_3b']) else "__"), axis=1)
 
-df['base_out_state'] = df['outs_when_up'].astype(str) + " outs, " + \
-df['on_1b'].notna().replace({True: "1b", False: "_"}) + ", " + \
-df['on_2b'].notna().replace({True: "2b", False: "_"}) + ", " + \
-df['on_3b'].notna().replace({True: "3b", False: "_"})
+# Split the 'base_out_state' into separate components
+base_states = df['base_out_state'].str.split(', ', expand=True)
 
-re_table = df.groupby('base_out_state')['runs_score_on_pitch'].mean().reset_index(name='avg_runs')
+df['outs'] = base_states[0]
+df['on_1b'] = base_states[1]
+df['on_2b'] = base_states[2]
+df['on_3b'] = base_states[3]
+df['base_state'] = df['on_1b'] + ' , ' + df['on_2b'] + ' , ' + df['on_3b']
 
-print(re_table)
-#%%
+filtered_df = df[(df['final_pitch_at_bat'] == 1) & (df['inning'] < 9)]
 
-# 無效出局
-single_outs = ["strikeout", "caught_stealing_2b", "pickoff_caught_stealing_2b",
-"other_out", "caught_stealing_3b", "caught_stealing_home",
-"field_out", "force_out", "pickoff_1b", "batter_interference",
-"fielders_choice", "pickoff_2b", "pickoff_caught_stealing_3b",
-"pickoff_caught_stealing_home"
-]
-single_outs_df = df[df['events'].isin(single_outs)]
+re_table = (filtered_df.groupby('base_out_state', as_index=False)
+    .agg(avg_re=('runs_to_end_inning', 'mean'))
+    .sort_values(by='avg_re', ascending=False))
 
-# 排序
-df.sort_values(by = ['game_pk', 'at_bat_number', 'pitch_number'], inplace=True)
+re_table_cttable = (filtered_df.groupby(['outs', 'base_state'], as_index=False)
+    .agg(avg_re=('runs_to_end_inning', 'mean'))
+    .sort_values(by='avg_re', ascending=False))
 
-# last pitch per game
-df['final_pitch_game'] = df.groupby('game_pk')\
-['pitch_number'].transform(lambda x: (x == x.max()).astype(int))
+# Estibalsh the pivot table of re_table
+re_table_cttable['outs'] = re_table_cttable['outs'].str.strip()
+pivot_re_table = re_table_cttable.pivot(index='base_state', \
+columns='outs', values='avg_re').fillna(0)
+##################################################
 
-# last pitch per at bat
-df['final_pitch_at_bat'] = df.groupby(['game_pk', 'at_bat_number', 'inning_topbot'])\
-['pitch_number'].transform(lambda x: (x == x.max()).astype(int))
+df = pd.merge(df, re_table, how='left', on='base_out_state')
+df = df[df['final_pitch_at_bat'] == 1]
+df['next_base_out_state'] = df.groupby(['game_pk', 'inning', 'inning_topbot'])['base_out_state'].shift(-1)
+df = pd.merge(df, re_table, how='left', left_on='next_base_out_state', right_on='base_out_state', suffixes=('', '_next'))
 
-# last pitch per inning_topbot
-df['final_pitch_inning'] = 0
-df.loc[df['final_pitch_at_bat'] == 1 & df['inning_topbot'] != df.groupby(['game_pk', 'inning_topbot'])['inning_topbot'].shift(-1), 'final_pitch_inning'] = 1
-df['final_pitch_inning'].fillna(1, inplace=True)
+df['next_avg_re'] = df['avg_re_next'].fillna(0)
+df['change_re'] = df['next_avg_re'] - df['avg_re']
+df['re24'] = df['change_re'] + df['runs_scored_on_pitch']
 
-# Calculate the score resulting from each pitch.
-df['runs_score_on_pitch'] = df['des'].str.count("scores")
-df.loc[df['events'] == 'home_run', 'runs_score_on_pitch'] += 1
-df['bat_score_after'] = df['bat_score'] + df['runs_score_on_pitch']
+df.sort_values(by=['game_pk', 'inning', 'inning_topbot'], inplace=True)
 
-# Calculate accumlated socres per innings
-df['score_start_inning'] = df.groupby(['gmae_pk', 'inning', 'inning_topbot'])['bat_score'].transform('minimun')
-df['score_end_inning'] = df.groupby(['gmae_pk', 'inning', 'inning_topbot'])['bat_score'].transform('maximum')
-df['cum_runs_in_inning'] = df.groupby(['game_pk', 'inning', 'inning_topbot']).cumsum()['runs_score_on_pitch']
-df['runs_to_end_inning'] = df['score_end_inning'] - df['score']
 
-df['base_out_state'] = df['outs_when_up'].astype(str) + " outs, " + \
-df['on_1b'].notna().replace({True: "1b", False: "_"}) + ", " + \
-df['on_2b'].notna().replace({True: "2b", False: "_"}) + ", " + \
-df['on_3b'].notna().replace({True: "3b", False: "_"})
-
-re_table = df.groupby('base_out_state')['runs_score_on_pitch'].mean().reset_index(name='avg_runs')
-    
-    return re_table
+########################################################
+df.to_csv(r"C:\Users\閻天立\Desktop\pybaseball\testing.csv")
 #%%
