@@ -10,8 +10,8 @@ def run_expectancy_table(df):
                 .agg(avg_re=('runs_to_end_inning', 'mean'))
                 .sort_values(by='avg_re', ascending=False))
         
-df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\rv.csv")
-# df = df.head()
+df = pd.read_csv(r"C:\Users\閻天立\Desktop\pybaseball\data2022.csv")
+#df = df[df['pitch_type'] == 'FF']
 
 df = df.sort_values(by=['game_pk', 'at_bat_number', 'pitch_number'])
 df['final_pitch_game'] = np.where(df.groupby('game_pk')['pitch_number'].transform('max') == df['pitch_number'], 1, 0)
@@ -60,8 +60,11 @@ re_table_cttable = (filtered_df.groupby(['outs', 'base_state'], as_index=False)
 re_table_cttable['outs'] = re_table_cttable['outs'].str.strip()
 pivot_re_table = re_table_cttable.pivot(index='base_state', \
 columns='outs', values='avg_re').fillna(0)
-##################################################
 
+print(pivot_re_table)
+#%%
+##################################################
+# 將df增加資料列
 df = pd.merge(df, re_table, how='left', on='base_out_state')
 df = df[df['final_pitch_at_bat'] == 1]
 df['next_base_out_state'] = df.groupby(['game_pk', 'inning', 'inning_topbot'])['base_out_state'].shift(-1)
@@ -72,8 +75,6 @@ df['change_re'] = df['next_avg_re'] - df['avg_re']
 df['re24'] = df['change_re'] + df['runs_scored_on_pitch']
 
 df.sort_values(by=['game_pk', 'inning', 'inning_topbot'], inplace=True)
-
-
 ########################################################
-df.to_csv(r"C:\Users\閻天立\Desktop\pybaseball\testing.csv")
+
 #%%
