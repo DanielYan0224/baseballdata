@@ -1,7 +1,7 @@
 #%%
 import pandas as pd
 import numpy as np
-
+from scipy.stats import entropy
 def run_expectancy_table(df):
     # Filter for final pitches in at-bats and innings less than 9
     filtered_df = df[(df['final_pitch_at_bat'] == 1) & (df['inning'] < 9)]
@@ -77,4 +77,50 @@ df['re24'] = df['change_re'] + df['runs_scored_on_pitch']
 df.sort_values(by=['game_pk', 'inning', 'inning_topbot'], inplace=True)
 ########################################################
 
+#%%
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import entropy
+
+file_path = r"C:\Users\閻天立\Desktop\pybaseball\data2022.csv"
+df = pd.read_csv(file_path)
+pk_study = 'delta_run_exp'
+qk_study = 'release_pos_z'
+
+pk = df[pk_study].fillna(0)
+qk = df[qk_study].fillna(0)
+
+hist, bin_edges = np.histogram(pk, bins=15, density=True)
+
+prob = hist * np.diff(bin_edges)
+
+plt.bar(bin_edges[:-1], hist, \
+width=np.diff(bin_edges), edgecolor='black', alpha=0.7)
+plt.ylabel('Probability Density')
+plt.xlabel('Value')
+plt.title('Histogram')
+
+plt.show()
+
+prob_sum = prob.sum()
+if prob_sum != 0:
+    prob_normalized = prob / prob_sum
+else:
+    prob_normalized = prob
+
+# 计算熵，这里以2为底
+pk_entropy = entropy(prob_normalized, base=2)
+
+print(pk_entropy)
+
+#%%
+qk_entropy = entropy(qk,  \
+base=len(df[qk_study].fillna(0)))
+
+
+relative_entropy = entropy(pk, qk, \
+base=len(df[pk_study].fillna(0)))
+print(pk_entropy, qk_entropy,
+    relative_entropy, sep='\n')
 #%%
