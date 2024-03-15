@@ -36,12 +36,28 @@ pk_entropy = entropy(prob_normalized, base=2)
 print(pk_entropy)
 
 #%%
-qk_entropy = entropy(qk,  \
-base=len(df[qk_study].fillna(0)))
+import numpy as np
+import pandas as pd
+from scipy.stats import entropy
 
+def joint_entropy(x, y):
+    xy = np.c_[x, y]
+    _, counts = np.unique(xy, axis=0, return_counts=True)
+    probs = counts / counts.sum()
 
-relative_entropy = entropy(pk, qk, \
-base=len(df[pk_study].fillna(0)))
-print(pk_entropy, qk_entropy,
-    relative_entropy, sep='\n')
+    return entropy(probs, base=2)
+file_path = r"C:\Users\閻天立\Desktop\pybaseball\data2022.csv"
+df = pd.read_csv(file_path)
+
+pk_study = 'delta_run_exp'
+qk_study = 'release_pos_z'
+
+x = df[pk_study].fillna(0)
+y = df[qk_study].fillna(0)
+
+# x = np.array([1, 2, 3, 4, 5])
+# y = np.array([2, 2, 3, 3, 5])
+
+print(np.c_[x, y])
+print("Joint Entropy:", joint_entropy(x, y))
 #%%
