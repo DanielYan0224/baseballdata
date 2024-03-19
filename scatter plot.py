@@ -23,15 +23,13 @@ cole_2223.to_csv(r"C:\Users\user\Desktop\baseballdata\cole_2223.csv")
 year = '2023'
 cole_2223 = cole_2223[cole_2223['year'] == year]
 
-
-# 提取 x 和 y 變量
-x_label = 'plate_z'
+x_label = 'launch_angle'
 y_label = 'launch_speed'
 x = cole_2223[x_label]
 y = cole_2223[y_label]
 
 # 定義條件以更改顏色
-condition_gray = (cole_2223['events'] == 'field_out')
+condition_gray = (cole_2223['events'] == 'home_run')
 condition_black = ~condition_gray  # 反轉條件
 
 # 將符合特定條件的數據點移至數據框頂部
@@ -39,7 +37,6 @@ data_sorted = pd.concat([cole_2223[condition_gray], cole_2223[~condition_gray]])
 
 fig = px.scatter(data_sorted, x=x, y=y, color=condition_gray, color_discrete_map={True: 'red', False: 'gray'}, 
                 symbol=condition_gray, symbol_map={True: 'diamond', False: 'circle'})  
-
 
 fig.update_xaxes(title_text = x_label)
 fig.update_yaxes(title_text = y_label)
