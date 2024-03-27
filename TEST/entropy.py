@@ -31,37 +31,39 @@ def CE(data_x, data_y, bins_x, bins_y):
 # Import Data
 file_path = r"C:\Users\user\Desktop\baseballdata\data2022.csv" 
 df = pd.read_csv(file_path)
+df = df[(df['description'] == 'hit_into_play') &
+        (df['events'] != 'field_out')]
 
+#x = 'launch_angle'
 x = 'launch_speed'
-y = 'launch_angle'
-data_x = df[x]
-data_y = df[y]
+data = df[x].dropna()
 
-fig = px.histogram(df[x], x=x, histnorm='probability density',\
-title='Histogram of Launch Speed Ranges', text_auto=True)
-fig.write_html('histrogram.html', auto_open=True)
-print(DE(data_x, bins_x))
-print(DE(df['launch_angle'], bins_x))
+# plot histogram without sorting
+# fig = px.histogram(df[x], x=x, histnorm='probability density',\
+# title= f'Histogram of {x} Ranges', text_auto=True)
+# fig.write_html('histrogram.html', auto_open=True)
+
 
 ###########################################
 # Cut the Data
-bins_x = [0, 70, 90, 100, 110, 120]
-bins_y = [-80, -20, -10, 0, 40, 90]
+#bins = [data.min(), -20, 0, 30, 50, data.max()]
+bins = [data.min(), 70, 80, 100, data.max()]
 
 ###########################################
-df['launch_speed'] = df['launch_speed'].fillna(0)
-df[f'{x}_histro'] = pd.cut(df[x], \
-bins=bins_x, right=False)
+labels = [f'[{bins[i]}, {bins[i+1]})' \
+        for i in range(len(bins)-1)]
 
-print(df[f'{x}_histro'], df[x])
+data_cut = pd.cut(data, bins=bins, right=False, labels=labels).dropna()
+df['intervals'] = data_cut
 
-# 把切割的區間轉成字串顯示在histrogram
-df[f'{x}_histro'] = df[f'{x}_histro'].astype(str)
-
+###########################################
 # Plot histrogram
-fig = px.histogram(df, x=f'{x}_histro', \
-histnorm='probability density',\
-title='Histogram of Launch Speed Ranges', text_auto=True)
+fig = px.histogram(df, x='intervals', histnorm='percent',
+            title=f'Histogram of {x} Ranges',
+            category_orders={'intervals': labels},
+            text_auto=True)
+fig.show()
 fig.write_html('hisstrogram.html', auto_open=True)
 ###########################################
+print(DE(data, bins))
 #%% 
