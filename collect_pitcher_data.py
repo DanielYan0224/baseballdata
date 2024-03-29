@@ -11,7 +11,7 @@ import pandas as pd
 merged_df = pd.DataFrame()
 
 # Load your dataset
-df = pd.read_csv(r"C:\Users\閻天立\Downloads\2022_batter_oppo.csv")
+df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\2022spdata.csv")
 
 # Fill NaN values with 0
 df.fillna(0, inplace=True)
@@ -31,8 +31,8 @@ for player_id in id:
 # Concatenate the DataFrames along the rows 
 merged_df = pd.concat(dfs, axis=0)
 
-import pandas as pd
-merged_df.to_csv(r"C:\Users\閻天立\Desktop\pybaseball\2022_batter_oppo.csv")
+
+merged_df.to_csv(r"C:\Users\user\Desktop\baseballdata\2022sppitchingdata.csv")
 
 
 

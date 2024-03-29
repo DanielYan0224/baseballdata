@@ -10,45 +10,57 @@ import fractions
 import itertools
 import collections
 from fractions import Fraction as F
-# 讀取 CSV 檔案
-data_2022 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2022.csv")
-data_2022.insert(1, 'year', '2022')
 
-data_2023 = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\data2023.csv")
-data_2023.insert(1, 'year', '2023')
+file_path = r"C:\Users\user\Desktop\baseballdata\2022sppitchingdata.csv"
+df = pd.read_csv(file_path)
 
-cole_2223 = merged_data = pd.concat([data_2022, data_2023], axis=0)
-cole_2223.to_csv(r"C:\Users\user\Desktop\baseballdata\cole_2223.csv")
+#cole_2223 = cole_2223[cole_2223['pitch_type'] == 'FF']
+#cole_2223 = cole_2223[cole_2223['year'] == year]
+df = df[df['description'] == 'hit_into_play']
 
-cole_2223 = cole_2223[cole_2223['pitch_type'] == 'SL']
+x_label = 'launch_angle'
+y_label = 'launch_speed'
 
-year = '2022'
-cole_2223 = cole_2223[(cole_2223['description'] == 'hit_into_play')\
-            & (cole_2223['year'] == year)]
+def new_event(events):
+    if events == 'single':
+        return 'single'
+    elif events == 'double':
+        return 'double'
+    elif events == 'triple':
+        return 'triple'
+    elif events == 'home_run':
+        return 'home_run'
+    elif events == 'field_out':
+        return 'field_out'
+    else:
+        return 'others'
+    
+df['new_events'] = df['events'].apply(new_event)
 
-x_label = 'zone'
-y_label = 'effective_speed'
 
+fig = px.scatter(df, x=x_label, y=y_label, \
+        color=df['new_events'], \
+symbol=df['new_events'], marginal_x="histogram", marginal_y="histogram"
+#title=f'Scattorplot of {year}', 
+#trendline="ols",
+#trendline_scope="overall"
+)
+# fig.add_annotation(
+#     x=max(cole_2223[x_label]),  # Position the annotation at the right-most point
+#     y=max(cole_2223[y_label]),  # Position the annotation at the top-most point
+#     text=f'Correlation: {corr:.2f}',  # Format the correlation to 2 decimal places
+#     showarrow=False,
+#     yshift=10,  # Shift the annotation slightly up for aesthetics
+#     xanchor='right',  # Anchor the text to the right
+#     bgcolor='white',  # Optional: provide a background color for the annotation text
+#     bordercolor='black',  # Optional: provide a border color
+#     borderwidth=1  # Optional: specify the border width
+# )
 
-# 定義條件以更改顏色
-condition = (cole_2223['events'] == 'field_out')
-condition_reverse = ~condition  # 反轉條件
-
-# 將符合特定條件的數據點移至數據框頂部
-data_sorted = pd.concat([cole_2223[condition], cole_2223[~condition]])
-
-fig = px.scatter(data_sorted, x=x_label, y=y_label, color=condition, \
-    color_discrete_map={True: 'red', False: 'gray'}, 
-symbol=condition, marginal_x="histogram", marginal_y="histogram",
-title=f'Scattorplot of {year}')
-
-# fig.update_xaxes(title_text = x_label)
-# fig.update_yaxes(title_text = y_label)
-# fig.update_layout(title= year, title_x=0.5, title_y=0.95)
-bins_x = [cole_2223['launch_angle'].min(), -20, \
-        0, 30, 50, cole_2223['launch_angle'].max()]
-bins_y = [cole_2223['launch_speed'].min(), 70, \
-        80, 100, cole_2223['launch_speed'].max()]
+bins_x = [df['launch_angle'].min(), -20, \
+        0, 20, 40, df['launch_angle'].max()]
+bins_y = [df['launch_speed'].min(), 70, \
+        80, 100, df['launch_speed'].max()]
 
 
 # graph line on x-axis
@@ -62,13 +74,9 @@ bins_y = [cole_2223['launch_speed'].min(), 70, \
 # bins_y = [cole_2223['launch_speed'].min(), 70, \
 #         80, 100, cole_2223['launch_speed'].max()]
 # for i in range(1, len(bins_y)):
-#     fig.add_shape(type="line", 
-#             x0=0, y0=bins_y[i], x1=1, y1=bins_y[i], 
-#             xref="paper", yref="y",  
-#             line=dict(color="RoyalBlue", width=1))
-
-
+    # fig.add_shape(type="line", 
+    #         x0=0, y0=bins_y[i], x1=1, y1=bins_y[i], 
+    #         xref="paper", yref="y",  
+    #         line=dict(color="RoyalBlue", width=1))
 fig.write_html('scatter_plot.html', auto_open=True)
-
-
 #%%
