@@ -1,0 +1,74 @@
+#%%
+import plotly.express as px
+import pandas as pd
+import ipywidgets as widgets
+from IPython.display import display
+
+# Load the data
+file_path = r"C:\Users\user\Desktop\baseballdata\2022sppitchingdata.csv"
+df = pd.read_csv(file_path)
+
+# Preprocess the data
+df = df[df['description'] == 'hit_into_play']
+
+# Define a function to categorize events
+def new_event(events):
+    if events == 'single':
+        return 'single'
+    elif events == 'double':
+        return 'double'
+    elif events == 'triple':
+        return 'triple'
+    elif events == 'home_run':
+        return 'home_run'
+    elif events == 'field_out':
+        return 'field_out'
+    else:
+        return 'others'
+
+# Apply the function to create a new column for event categories
+df['new_events'] = df['events'].apply(new_event)
+
+# 定義new_events的顏色
+color_discrete_map = {
+    'single': 'blue',
+    'double': 'orange',
+    'triple': 'green',
+    'home_run': 'red',
+    'field_out': 'purple',
+    'others': 'grey'
+}
+
+# Function to update the plot based on the selected pitcher ID
+def update_plot(pitcher_id):
+    # 根據選中的投手篩選 DataFrame
+    filtered_df = df[df['pitcher'] == pitcher_id]
+
+    # 定義軸範圍
+    x_range = [df['launch_angle'].min(), df['launch_angle'].max()]
+    y_range = [df['launch_speed'].min(), df['launch_speed'].max()]
+
+    # 使用 plotly express 更新散點圖，並固定軸範圍和顏色
+    fig = px.scatter(
+        filtered_df,
+        x='launch_angle',
+        y='launch_speed',
+        color='new_events',
+        symbol='new_events',
+        marginal_x="histogram",
+        marginal_y="histogram",
+        color_discrete_map=color_discrete_map,
+        range_x=x_range,
+        range_y=y_range
+    )
+
+    #fig.show()
+    fig.write_html('scatter_plot.html', auto_open=True)
+# 創建下拉選單並展示
+pitcher_dropdown = widgets.Dropdown(
+    options=[('Select a pitcher', None)] + [(str(id), id) for id in df['pitcher'].unique()],
+    description='Pitcher ID:'
+)
+interactive_widget = widgets.interactive(update_plot, pitcher_id=pitcher_dropdown)
+display(interactive_widget)
+#%%

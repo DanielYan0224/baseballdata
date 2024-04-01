@@ -5,10 +5,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import csv
-import fractions
-import itertools
-import collections
+import ipywidgets as widgets
+from IPython.display import display
 from fractions import Fraction as F
 
 file_path = r"C:\Users\user\Desktop\baseballdata\2022sppitchingdata.csv"
@@ -21,6 +19,9 @@ df = df[df['description'] == 'hit_into_play']
 x_label = 'launch_angle'
 y_label = 'launch_speed'
 
+def update_plot(pitcher_id):
+    # Filter the DataFrame for the selected pitcher
+    filtered_df = df[df['pitcher'] == pitcher_id]
 def new_event(events):
     if events == 'single':
         return 'single'
@@ -39,11 +40,9 @@ df['new_events'] = df['events'].apply(new_event)
 
 
 fig = px.scatter(df, x=x_label, y=y_label, \
-        color=df['new_events'], \
-symbol=df['new_events'], marginal_x="histogram", marginal_y="histogram"
-#title=f'Scattorplot of {year}', 
-#trendline="ols",
-#trendline_scope="overall"
+        color='new_events', \
+symbol='new_events', 
+marginal_x="histogram", marginal_y="histogram",
 )
 # fig.add_annotation(
 #     x=max(cole_2223[x_label]),  # Position the annotation at the right-most point
@@ -79,4 +78,16 @@ bins_y = [df['launch_speed'].min(), 70, \
     #         xref="paper", yref="y",  
     #         line=dict(color="RoyalBlue", width=1))
 fig.write_html('scatter_plot.html', auto_open=True)
+
+# Create a dropdown widget for selecting the pitcher ID
+pitcher_dropdown = widgets.Dropdown(
+    options=[('Select a pitcher', None)] + [(str(id), id) for id in df['pitcher'].unique()],
+    description='Pitcher ID:'
+)
+
+# Bind the update_plot function to changes in the dropdown
+widgets.interactive(update_plot, pitcher_id=pitcher_dropdown)
+
+# Display the dropdown
+display(pitcher_dropdown)
 #%%
