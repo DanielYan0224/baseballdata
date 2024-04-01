@@ -19,9 +19,6 @@ df = df[df['description'] == 'hit_into_play']
 x_label = 'launch_angle'
 y_label = 'launch_speed'
 
-def update_plot(pitcher_id):
-    # Filter the DataFrame for the selected pitcher
-    filtered_df = df[df['pitcher'] == pitcher_id]
 def new_event(events):
     if events == 'single':
         return 'single'
@@ -38,9 +35,18 @@ def new_event(events):
     
 df['new_events'] = df['events'].apply(new_event)
 
+color_discrete_map = {
+    'single': 'blue',
+    'double': 'orange',
+    'triple': 'green',
+    'home_run': 'red',
+    'field_out': 'purple',
+    'others': 'grey'
+}
 
 fig = px.scatter(df, x=x_label, y=y_label, \
         color='new_events', \
+        color_discrete_map=color_discrete_map,
 symbol='new_events', 
 marginal_x="histogram", marginal_y="histogram",
 )
@@ -79,15 +85,102 @@ bins_y = [df['launch_speed'].min(), 70, \
     #         line=dict(color="RoyalBlue", width=1))
 fig.write_html('scatter_plot.html', auto_open=True)
 
-# Create a dropdown widget for selecting the pitcher ID
+def update_scatter_plot(pitcher_id):
+    # 根据选定的 pitcher ID 过滤 DataFrame
+    filtered_df = df[df['pitcher'] == pitcher_id] if pitcher_id != 'All' else df
+
+    # 创建散点图
+    fig = px.scatter(filtered_df, x=x_label, y=y_label,
+                color='new_events',
+                symbol='new_events',
+                marginal_x="histogram",
+                marginal_y="histogram",
+                color_discrete_map=color_discrete_map)
+    
+    # 将图表显示在 Notebook 中
+    fig.show()
+
+
+pitcher_ids = ['All'] + sorted(df['pitcher'].unique().tolist())
+pitcher_dropdown = widgets.Dropdown(options=pitcher_ids, value='All', description='Pitcher ID:')
+
+
+widgets.interactive(update_scatter_plot, pitcher_id=pitcher_dropdown)
+#%%
+import plotly.graph_objects as go
+import pandas as pd
+import ipywidgets as widgets
+from IPython.display import display
+
+# 加载数据和预处理...
+file_path = r"C:\Users\user\Desktop\baseballdata\2022sppitchingdata.csv"
+df = pd.read_csv(file_path)
+df = df[df['description'] == 'hit_into_play']
+
+x_label = 'launch_angle'
+y_label = 'launch_speed'
+
+def new_event(events):
+    if events == 'single':
+        return 'single'
+    elif events == 'double':
+        return 'double'
+    elif events == 'triple':
+        return 'triple'
+    elif events == 'home_run':
+        return 'home_run'
+    elif events == 'field_out':
+        return 'field_out'
+    else:
+        return 'others'
+df['new_events'] = df['events'].apply(new_event)
+
+def update_scatter_plot(pitcher_id):
+    # 标记是否为选定的投手
+    df['highlight'] = df['pitcher'] == pitcher_id
+    
+    # 使用 plotly.graph_objects 创建散点图，以便更细致地控制颜色
+    fig = go.Figure()
+    
+    # 添加不是选定投手的数据点，颜色设置为灰色
+    fig.add_trace(go.Scatter(x=df[~df['highlight']][x_label], y=df[~df['highlight']][y_label],
+                        mode='markers', marker_color='lightgrey', name='Others'))
+    symbol_map = {
+    'single': 'circle',
+    'double': 'square',
+    'triple': 'diamond',
+    'home_run': 'star',
+    'field_out': 'x',
+    'others': 'triangle-up'
+}
+    color_discrete_map = {
+    'single': 'blue',
+    'double': 'orange',
+    'triple': 'green',
+    'home_run': 'red',
+    'field_out': 'purple',
+    'others': 'grey'
+}
+    # 添加选定投手的数据点，使用 new_events 来设置颜色
+    for event, group_df in df[df['highlight']].groupby('new_events'):
+        fig.add_trace(go.Scatter(x=group_df[x_label], y=group_df[y_label], mode='markers',
+        marker_symbol=symbol_map[event], 
+        name=event, marker_color=color_discrete_map[event]))
+    
+    # 显示图表
+    fig.show()
+
+# 创建下拉菜单
 pitcher_dropdown = widgets.Dropdown(
     options=[('Select a pitcher', None)] + [(str(id), id) for id in df['pitcher'].unique()],
-    description='Pitcher ID:'
+    description='Pitcher ID:',
+    value=None  # 默认没有选中任何投手
 )
 
-# Bind the update_plot function to changes in the dropdown
-widgets.interactive(update_plot, pitcher_id=pitcher_dropdown)
+# 创建一个用于更新散点图的互动控件
+interactive_plot = widgets.interactive(update_scatter_plot, pitcher_id=pitcher_dropdown)
 
-# Display the dropdown
-display(pitcher_dropdown)
+# 显示下拉菜单
+display(interactive_plot)
+
 #%%
