@@ -9,7 +9,18 @@ import ipywidgets as widgets
 from IPython.display import display
 from fractions import Fraction as F
 
-file_path = r"C:\Users\user\Desktop\baseballdata\2022sppitchingdata.csv"
+#%%
+import plotly.express as px
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import ipywidgets as widgets
+from IPython.display import display
+from fractions import Fraction as F
+
+file_path = r"C:\Users\user\Desktop\baseballdata\2023sppitchingdata.csv"
 df = pd.read_csv(file_path)
 
 #cole_2223 = cole_2223[cole_2223['pitch_type'] == 'FF']
@@ -19,92 +30,73 @@ df = df[df['description'] == 'hit_into_play']
 x_label = 'launch_angle'
 y_label = 'launch_speed'
 
+bins_x = [df[x_label].min(), \
+        0, 40, df[x_label].max()]
+bins_y = [df[y_label].min(), 60, 80, df[y_label].min()]
+
+# 定義每個安打的價值
 def new_event(events):
-    if events == 'single':
-        return 'single'
-    elif events == 'double':
-        return 'double'
-    elif events == 'triple':
-        return 'triple'
-    elif events == 'home_run':
-        return 'home_run'
-    elif events == 'field_out':
-        return 'field_out'
-    else:
-        return 'others'
-    
-df['new_events'] = df['events'].apply(new_event)
+    mapping = {'single': 1, 'double': 2, 'triple': 3, 'home_run': 4, 'field_out': 0}
+    return mapping.get(events, 0)  # 默认返回0
+
+# 定義分割的區間
+def assign_zone(df):
+    if df['launch_angle'] < 0:
+        if df['launch_speed'] < 60:
+            return 'A'  # Zone A
+        elif 60 <= df['launch_speed'] < 80:
+            return 'B'  # Zone B
+        else:
+            return 'C'  # Zone C
+    elif 0 <= df['launch_angle'] < 40:
+        if 60 <= df['launch_speed'] < 80:
+            return 'D'  # Zone D
+    elif df['launch_angle'] >= 40:
+        if 60 <= df['launch_speed'] < 80:
+            return 'E'  # Zone E
+    return 'Other'  # 其他区域
+
+df['Zone'] = df.apply(assign_zone, axis=1)
+df['event_numeric'] = df['events'].apply(new_event).astype(str)  # 确保这里的列名与您的DataFrame中的列名匹配
 
 color_discrete_map = {
-    'single': 'blue',
-    'double': 'orange',
-    'triple': 'green',
-    'home_run': 'red',
-    'field_out': 'purple',
-    'others': 'grey'
+    '1': 'blue',   
+    '2': 'orange',
+    '3': 'green',
+    '4': 'red',
+    '0': 'purple'
 }
 
+
 fig = px.scatter(df, x=x_label, y=y_label, \
-        color='new_events', \
+        color='event_numeric', \
         color_discrete_map=color_discrete_map,
-symbol='new_events', 
-marginal_x="histogram", marginal_y="histogram",
+        marginal_x="histogram", marginal_y="histogram",
 )
-# fig.add_annotation(
-#     x=max(cole_2223[x_label]),  # Position the annotation at the right-most point
-#     y=max(cole_2223[y_label]),  # Position the annotation at the top-most point
-#     text=f'Correlation: {corr:.2f}',  # Format the correlation to 2 decimal places
-#     showarrow=False,
-#     yshift=10,  # Shift the annotation slightly up for aesthetics
-#     xanchor='right',  # Anchor the text to the right
-#     bgcolor='white',  # Optional: provide a background color for the annotation text
-#     bordercolor='black',  # Optional: provide a border color
-#     borderwidth=1  # Optional: specify the border width
-# )
 
-bins_x = [df['launch_angle'].min(), -20, \
-        0, 20, 40, df['launch_angle'].max()]
-bins_y = [df['launch_speed'].min(), 70, \
-        80, 100, df['launch_speed'].max()]
+fig.add_shape(type="line", 
+        x0=df['launch_angle'].min(), y0=bins_y[1],
+        x1=0, y1=bins_y[1], 
+        xref="x", yref="y",  
+        line=dict(color="black", width=1.5))
 
+fig.add_shape(type="line", 
+        x0=bins_x[1], y0=0, x1=bins_x[1], y1=1, 
+        xref="x", yref="paper",  
+        line=dict(color="black", width=1.5))
 
-# graph line on x-axis
-# for i in range(1, len(bins_x)):
-#     fig.add_shape(type="line", 
-#             x0=bins_x[i], y0=0, x1=bins_x[i], y1=1, 
-#             xref="x", yref="paper",  
-#             line=dict(color="RoyalBlue", width=1))
+fig.add_shape(type="line", 
+        x0=bins_x[2], y0=0, x1=bins_x[2], y1=1, 
+        xref="x", yref="paper",  
+        line=dict(color="black", width=1.5))
 
-# # graph line on y-axis
-# bins_y = [cole_2223['launch_speed'].min(), 70, \
-#         80, 100, cole_2223['launch_speed'].max()]
-# for i in range(1, len(bins_y)):
-    # fig.add_shape(type="line", 
-    #         x0=0, y0=bins_y[i], x1=1, y1=bins_y[i], 
-    #         xref="paper", yref="y",  
-    #         line=dict(color="RoyalBlue", width=1))
-fig.write_html('scatter_plot.html', auto_open=True)
+fig.add_shape(type="line", 
+        x0=0, y0=bins_y[2], x1=bins_x[2], y1=bins_y[2], 
+        xref="x", yref="y",  
+        line=dict(color="black", width=1.5))
 
-def update_scatter_plot(pitcher_id):
-    # 根据选定的 pitcher ID 过滤 DataFrame
-    filtered_df = df[df['pitcher'] == pitcher_id] if pitcher_id != 'All' else df
-
-    # 创建散点图
-    fig = px.scatter(filtered_df, x=x_label, y=y_label,
-                color='new_events',
-                symbol='new_events',
-                marginal_x="histogram",
-                marginal_y="histogram",
-                color_discrete_map=color_discrete_map)
-    
-    # 将图表显示在 Notebook 中
-    fig.show()
-
-
-pitcher_ids = ['All'] + sorted(df['pitcher'].unique().tolist())
-pitcher_dropdown = widgets.Dropdown(options=pitcher_ids, value='All', description='Pitcher ID:')
-
-
+fig.write_html('allpitcher.html', auto_open=True)
+#%%
 widgets.interactive(update_scatter_plot, pitcher_id=pitcher_dropdown)
 #%%
 import plotly.graph_objects as go

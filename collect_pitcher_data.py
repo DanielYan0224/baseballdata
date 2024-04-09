@@ -11,7 +11,7 @@ import pandas as pd
 merged_df = pd.DataFrame()
 
 # Load your dataset
-df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\2022spdata.csv")
+df = pd.read_csv(r"C:\Users\user\Desktop\baseballdata\2023spdata.csv")
 
 # Fill NaN values with 0
 df.fillna(0, inplace=True)
@@ -24,7 +24,7 @@ dfs = []
 # Iterate over each player ID and fetch data
 for player_id in id:
     pitcher_data = statcast_pitcher(
-        start_dt="2022-04-07", end_dt="2022-11-05",
+        start_dt="2023-03-30", end_dt="2023-11-01",
         player_id=player_id)
     dfs.append(pitcher_data)
 
@@ -32,7 +32,7 @@ for player_id in id:
 merged_df = pd.concat(dfs, axis=0)
 
 
-merged_df.to_csv(r"C:\Users\user\Desktop\baseballdata\2022sppitchingdata.csv")
+merged_df.to_csv(r"C:\Users\user\Desktop\baseballdata\2023sppitchingdata.csv")
 
 
 
