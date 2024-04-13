@@ -20,6 +20,9 @@ df = df[df['description'] == 'hit_into_play']
 x_label = 'launch_angle'
 y_label = 'launch_speed'
 
+# delete the data that has nan in the labels
+df = df.dropna(subset=[x_label, y_label], how='any')
+
 # 只留下安打與出局
 def new_event(events):
     mapping = {'single': "single", 'double': "double", 
@@ -59,7 +62,13 @@ y_min, y_max = df[y_label].min(), df[y_label].max()
 
 x_lines = np.arange(x_min, x_max + grid_size, grid_size).tolist()
 
-y_lines = np.arange(y_min, y_max, grid_size).tolist()
+y_lines = np.arange(y_min, y_max + grid_size, grid_size).tolist()
+
+# check x_max and y_max
+if x_max not in x_lines:
+    x_lines.append(x_max)
+if y_max not in y_lines:
+    y_lines.append(y_max)
 
 for x in x_lines:
     fig.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
@@ -70,39 +79,20 @@ for y in y_lines:
     fig.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
                 xref='x', yref='y',
                 line=dict(color="Black", width=1))
-    
+
 #fig.write_html('allpitcher.html', auto_open=True)
-#fig.show()
 
 ###############################
-# # Create the arry 
-# array = [[0 for _ in range(len(x_lines) - 1)] 
-#         for _ in range(len(y_lines) - 1)]
-
-# # Iterate through the grid cells
-# for i in range(len(x_lines) - 1):
-#     for j in range(len(y_lines) - 1):
-#         # Count the number of data points in the current grid cell
-#         count = df.loc[
-#             (df[x_label] >= x_lines[i]) & 
-#             (df[x_label] < x_lines[i + 1]) &
-#             (df[y_label] >= y_lines[j]) & 
-#             (df[y_label] < y_lines[j + 1])
-#         ].shape[0]
-#         array[j][i] = count
-
 # Initialize the array with zeros
-A = [[0 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
-
 for i in range(len(x_lines) - 1):  
     for j in range(len(y_lines) - 1): 
+        label = f'{len(y_lines) - 2 -j}_{i}'
         df.loc[
             (df[x_label] >= x_lines[i]) & \
             (df[x_label] < x_lines[i+1]) & \
             (df[y_label] >= y_lines[j]) & \
             (df[y_label] < y_lines[j+1]), "grill"
-        ] =  f'{j}_{i}'
-
+        ] =  label
 
 # 定義每個事件的權重
 def weight(events):
@@ -110,22 +100,22 @@ def weight(events):
             'triple': 3, 'home_run': 4, 
             'field_out': 0}
     return mapping.get(events, 0)  # 其他的都是0
-df = df.dropna(subset=['grill', 'events'])  # 确保处理时 'grill' 和 'events' 都非空
+
 df["weighted_events"] = df["events"].apply(weight)
 
-# 按 'grill' 分组计算加权事件的总和
-grill_weighted_events = df.groupby('grill')['weighted_events'].sum()
+grill_weighted_events = df.groupby('grill')['weighted_events'].sum().dropna()
 
-# 将计算得到的权重存储到网格数组 A 中
+A = [[0 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
+
 for grill, weight in grill_weighted_events.items():
-    try:
-        j, i = map(int, grill.split('_'))
-        A[j][i] = weight
-    except ValueError as e:  # Catches conversion errors
-        print(f"Error converting {grill}: {e}")
+    if grill == 'nan':
+        continue  
+    j, i = map(int, grill.split('_')) 
+    A[j][i] = weight
 
-
-print(A)
+print(grill_weighted_events)
+for row in A:
+    print(row)
 #%%
 import plotly.graph_objects as go
 import pandas as pd
