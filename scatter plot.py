@@ -1,16 +1,6 @@
 #%%
 import plotly.express as px
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import ipywidgets as widgets
-from IPython.display import display
-from fractions import Fraction as F
-
-#%%
-import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -30,10 +20,6 @@ df = df[df['description'] == 'hit_into_play']
 x_label = 'launch_angle'
 y_label = 'launch_speed'
 
-bins_x = [df[x_label].min(), \
-        0, 40, df[x_label].max()]
-bins_y = [df[y_label].min(), 60, 80, df[y_label].min()]
-
 # 只留下安打與出局
 def new_event(events):
     mapping = {'single': "single", 'double': "double", 
@@ -41,14 +27,6 @@ def new_event(events):
             'field_out': "field_out"}
     return mapping.get(events, "others")  # 其他的都是0
 df['new_event'] = df['events'].apply(new_event).astype(str)  # 确保这里的列名与您的DataFrame中的列名匹配
-
-
-# 新增標線
-fig = px.scatter(df, x=x_label, y=y_label, \
-        color='new_event', \
-        color_discrete_map=color_discrete_map,
-        marginal_x="histogram", marginal_y="histogram",
-)
 
 symbol_map = {
     'single': 'circle',
@@ -67,43 +45,87 @@ color_discrete_map = {
     'others': 'grey'
 }
 
-fig.add_shape(type="line", 
-        x0=df['launch_angle'].min(), y0=bins_y[1],
-        x1=0, y1=bins_y[1], 
-        xref="x", yref="y",  
-        line=dict(color="black", width=1.5))
+# 新增標線
+fig = px.scatter(df, x=x_label, y=y_label, \
+        color='new_event', \
+        color_discrete_map=color_discrete_map,
+        marginal_x="histogram", marginal_y="histogram",
+)
 
-fig.add_shape(type="line", 
-        x0=bins_x[1], y0=0, x1=bins_x[1], y1=1, 
-        xref="x", yref="paper",  
-        line=dict(color="black", width=1.5))
+# 定義grid size
+grid_size = 5.0
+x_min, x_max = df[x_label].min(), df[x_label].max()
+y_min, y_max = df[y_label].min(), df[y_label].max()
 
-fig.add_shape(type="line", 
-        x0=bins_x[2], y0=0, x1=bins_x[2], y1=1, 
-        xref="x", yref="paper",  
-        line=dict(color="black", width=1.5))
+x_lines = np.arange(x_min, x_max + grid_size, grid_size).tolist()
 
-fig.add_shape(type="line", 
-        x0=0, y0=bins_y[2], x1=bins_x[2], y1=bins_y[2], 
-        xref="x", yref="y",  
-        line=dict(color="black", width=1.5))
+y_lines = np.arange(y_min, y_max, grid_size).tolist()
 
-fig.write_html('allpitcher.html', auto_open=True)
+for x in x_lines:
+    fig.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
+                xref='x', yref='y',
+                line=dict(color="Black", width=1))
 
-# Classify zone by LA and LS
-df.loc[(df[x_label] < 0) & (df[y_label] < 60), 'classify_zone'] = "A"
-df.loc[(df[x_label] < 0) & (df[y_label] >= 60), 'classify_zone'] = "B"
-df.loc[(0 <= df[x_label]) & (df[x_label] < 40) &
-    (bins_y[0] <= df[y_label]) & (df[y_label] <= 80)
-    , "classify_zone"] = "C"
-df.loc[(0 <= df[x_label]) & (df[x_label] < 40) \
-    & (80 < df[y_label] ) & (df[y_label] <= bins_y[3])
-    , 'classify_zone'] = 'D'
-df.loc[(40 <= df[x_label]), 'classify_zone'] = "E"
+for y in y_lines:
+    fig.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
+                xref='x', yref='y',
+                line=dict(color="Black", width=1))
+    
+#fig.write_html('allpitcher.html', auto_open=True)
+#fig.show()
+
+###############################
+# # Create the arry 
+# array = [[0 for _ in range(len(x_lines) - 1)] 
+#         for _ in range(len(y_lines) - 1)]
+
+# # Iterate through the grid cells
+# for i in range(len(x_lines) - 1):
+#     for j in range(len(y_lines) - 1):
+#         # Count the number of data points in the current grid cell
+#         count = df.loc[
+#             (df[x_label] >= x_lines[i]) & 
+#             (df[x_label] < x_lines[i + 1]) &
+#             (df[y_label] >= y_lines[j]) & 
+#             (df[y_label] < y_lines[j + 1])
+#         ].shape[0]
+#         array[j][i] = count
+
+# Initialize the array with zeros
+A = [[0 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
+
+for i in range(len(x_lines) - 1):  
+    for j in range(len(y_lines) - 1): 
+        df.loc[
+            (df[x_label] >= x_lines[i]) & \
+            (df[x_label] < x_lines[i+1]) & \
+            (df[y_label] >= y_lines[j]) & \
+            (df[y_label] < y_lines[j+1]), "grill"
+        ] =  f'{j}_{i}'
 
 
-df_E = df[df["classify_zone"] == "E"]
-print(df_E["new_event"].value_counts(normalize= True))
+# 定義每個事件的權重
+def weight(events):
+    mapping = {'single': 1, 'double': 2, 
+            'triple': 3, 'home_run': 4, 
+            'field_out': 0}
+    return mapping.get(events, 0)  # 其他的都是0
+df = df.dropna(subset=['grill', 'events'])  # 确保处理时 'grill' 和 'events' 都非空
+df["weighted_events"] = df["events"].apply(weight)
+
+# 按 'grill' 分组计算加权事件的总和
+grill_weighted_events = df.groupby('grill')['weighted_events'].sum()
+
+# 将计算得到的权重存储到网格数组 A 中
+for grill, weight in grill_weighted_events.items():
+    try:
+        j, i = map(int, grill.split('_'))
+        A[j][i] = weight
+    except ValueError as e:  # Catches conversion errors
+        print(f"Error converting {grill}: {e}")
+
+
+print(A)
 #%%
 import plotly.graph_objects as go
 import pandas as pd
