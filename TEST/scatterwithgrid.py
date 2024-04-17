@@ -206,7 +206,7 @@ fig2.update_layout(
     # )
 )
 
-fig2.write_html('heatmap.html', auto_open=True)
+fig2.write_html('heatmap.html', auto_open=True, include_plotlyjs="cdn")
 #%%
 fig.update_layout(
     annotations=[
