@@ -107,14 +107,6 @@ color_discrete_map = {
 
 #################################
 # Draw the scatter plot
-fig = px.scatter(df, x=x_label, y=y_label, \
-        color='new_event', 
-        symbol='new_event',
-        color_discrete_map=color_discrete_map,
-        symbol_map=symbol_map,
-        marginal_x="histogram", 
-        marginal_y="histogram",
-)
 
 # 定義grid
 x_min, x_max = df[x_label].min(), df[x_label].max()
@@ -128,15 +120,15 @@ y_lines = np.arange(y_min, y_max, grid_size_y).tolist()
 x_lines.append(x_max)
 y_lines.append(y_max)
 
-for x in x_lines:
-    fig.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
-                xref='x', yref='y',
-                line=dict(color="Black", width=1))
+# for x in x_lines:
+#     fig.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
+#                 xref='x', yref='y',
+#                 line=dict(color="Black", width=1))
 
-for y in y_lines:
-    fig.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
-                xref='x', yref='y',
-                line=dict(color="Black", width=1))
+# for y in y_lines:
+#     fig.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
+#                 xref='x', yref='y',
+#                 line=dict(color="Black", width=1))
 
 
 
@@ -174,11 +166,11 @@ symbol_list = df2022['new_event'].map(symbol_map).tolist()
 color_list = df2023['new_event'].map(color_discrete_map).tolist()
 symbol_list = df2023['new_event'].map(symbol_map).tolist()
 
-figscatter = px.imshow(matrix_year(df2022), 
+fighp = px.imshow(matrix_year(df2022), 
             color_continuous_scale=px.colors.sequential.RdBu_r)
 
 
-figscatter.update_layout(
+fighp.update_layout(
     updatemenus=[
         dict(
             type="buttons",
@@ -189,25 +181,25 @@ figscatter.update_layout(
                 dict(
                     label="2022",
                     method="restyle",
-                    args=[{"z": [matrix_year(df2022)]}]  # 将热图数据切换回原始数据
+                    args=[{"z": [matrix_year(df2022)]}] 
                 ),
                 dict(
                     label="2023",
                     method="restyle",
-                    args=[{"z": [matrix_year(df2023)]}]  # 将热图数据切换到另一组数据
+                    args=[{"z": [matrix_year(df2023)]}] 
                 )
             ]),
         )
     ]
 )
 
-figscatter.update_xaxes(tickvals=list(range(0, len(x_lines),5)),  
+fighp.update_xaxes(tickvals=list(range(0, len(x_lines),5)),  
         ticktext=[x_lines[k] for k in range(0, len(x_lines), 5)],
         tickangle=15,  # = 0 keep the labels horizontal
         tickfont=dict(color='black'),
         ticks="outside", tickwidth=2, tickcolor="crimson",
         ticklen=10)
-figscatter.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),  
+fighp.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),  
         ticktext=[round(y_lines[k], 2) for k in 
                 reversed(range(0, len(y_lines), 5))],
         tickangle=0,  # = 0 keep the labels horizontal
@@ -216,6 +208,6 @@ figscatter.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),
         ticklen=10)
 
 # 如果需要保存为 HTML
-figscatter.write_html('custom_scatter_plot.html', auto_open=True,
+fighp.write_html('custom_scatter_plot.html', auto_open=True,
             include_plotlyjs='cdn')
 #%%
