@@ -1,0 +1,183 @@
+#%%
+import re
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import ipywidgets as widgets
+from IPython.display import display
+from fractions import Fraction as F
+from math import log
+from plotly.graph_objs import Figure
+
+
+#################################
+#整理資料
+def extract_year(file_path):
+    match = re.search(r'\d{4}', file_path)
+    if match:
+        return int(match.group())  # Convert to integer
+    else:
+        return None 
+    
+def load_dataframe(file_path):
+    df = pd.read_csv(file_path)
+    df.insert(loc=1, column='year', value=extract_year(file_path))
+    return df
+
+# 只留下安打與出局
+def new_event(events):
+    mapping = {'single': "single", 'double': "double", 
+            'triple': "triple", 'home_run': "home_run", 
+            'field_out': "field_out", "double_play": "DP"}
+    return mapping.get(events, "others")  # 其他的都是others
+
+def weight(events):
+    mapping = mapp
+    return mapping.get(events, np.nan)  # 其他的都是nan
+
+def scort_data (df):
+    df = df.dropna(subset=[x_label, y_label], how='any')
+    df = df[df['description'] == 'hit_into_play']
+    df['new_event'] = df['events'].apply(new_event).astype(str)
+    return df
+
+def grill(df, x_lines, y_lines):
+    for i in range(len(x_lines) - 1):  
+        for j in range(len(y_lines) - 1): 
+            label = f'{len(y_lines) - 2 -j}_{i}'
+            df.loc[
+                (df[x_label] >= x_lines[i]) & \
+                (df[x_label] < x_lines[i+1]) & \
+                (df[y_label] >= y_lines[j]) & \
+                (df[y_label] < y_lines[j+1]), "grill"
+            ] =  label
+    return df
+
+def matrix_year(df):
+    numerator = df.groupby('grill')['weighted_events']\
+    .sum().dropna().to_dict()
+    denominator = df.groupby('grill').size().dropna().to_dict()
+    
+    ratio = {}
+    for grill in denominator:
+        if grill == 'nan':
+            continue
+        if grill in numerator:
+            if denominator[grill] > 0:
+                prob = numerator[grill] / denominator[grill]
+                ratio[grill] = prob
+
+    A = [[0 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
+    for key in ratio:  
+        parts = key.split('_')  
+        if len(parts) == 2:  
+            j, i = [int(part) for part in parts] 
+            A[j][i] = ratio[key]
+    return A
+
+file_path_1 = r"C:\Users\user\Desktop\baseballdata\2022sppitchingdata.csv"
+file_path_2 = r"C:\Users\user\Desktop\baseballdata\2023sppitchingdata.csv"
+
+x_label = 'launch_angle'
+y_label = 'launch_speed'
+
+df1 = scort_data(load_dataframe(file_path_1))
+
+df2 = scort_data(load_dataframe(file_path_2))
+
+df = pd.concat([df1, df2], axis=0)
+
+#################################
+#可調整
+file_path = file_path_1
+study_df = load_dataframe(file_path)
+x_grids = 40
+y_grids = 40
+mapp = {'single': 0, 
+'double': 0, 
+'triple': 0, 
+'home_run': 0,
+'DP': 1, 
+'field_out': 1,
+        }
+#################################
+# 定義grid
+x_min, x_max = df[x_label].min(), df[x_label].max()
+y_min, y_max = df[y_label].min(), df[y_label].max()
+
+grid_size_x = (x_max - x_min) / x_grids
+grid_size_y = (y_max - y_min) / y_grids
+x_lines = np.arange(x_min, x_max, grid_size_x).tolist()
+y_lines = np.arange(y_min, y_max, grid_size_y).tolist()
+
+x_lines.append(x_max)
+y_lines.append(y_max)
+#################################
+
+df2022 = grill(scort_data(df1), x_lines, y_lines)
+df2022["weighted_events"] = df2022["new_event"].apply(weight)
+df2023 = grill(scort_data(df2), x_lines, y_lines)
+df2023["weighted_events"] = df2023["new_event"].apply(weight)
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div([
+    dcc.Graph(id='heat-map'),
+    dcc.Dropdown(
+        id='dataset-dropdown',
+        options=[
+            {'label': '2022 Data', 'value': '2022'},
+            {'label': '2023 Data', 'value': '2023'}
+        ],
+        value='2022'  # 默认显示2022数据
+    )
+])
+
+@app.callback(
+    Output('heat-map', 'figure'),
+    [Input('dataset-dropdown', 'value')]
+)
+
+def update_heatmap(selected_year):
+    if selected_year == '2022':
+        data = matrix_year(df2022)
+        title = "Heatmap for 2022"
+    else:
+        data = matrix_year(df2023)
+        title = "Heatmap for 2023"
+
+    # 初始熱圖
+    fighp = px.imshow(matrix_year(df2022), 
+            color_continuous_scale=px.colors.sequential.RdBu_r)
+    
+    # 更改顯示的座標
+    fighp.update_xaxes(tickvals=list(range(0, len(x_lines),5)),  
+        ticktext=[x_lines[k] for k in range(0, len(x_lines), 5)],
+        tickangle=15,  # = 0 keep the labels horizontal
+        tickfont=dict(color='black'),
+        ticks="outside", tickwidth=2, tickcolor="crimson",
+        ticklen=10)
+    fighp.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),  
+        ticktext=[round(y_lines[k], 2) for k in 
+                reversed(range(0, len(y_lines), 5))],
+        tickangle=0,  # = 0 keep the labels horizontal
+        tickfont=dict(color='black'),
+        ticks="outside", tickwidth=2, tickcolor="crimson",
+        ticklen=10)
+    
+    fighp.update_layout(
+        title={
+        'text': title,   
+        'y':0.9,  
+        'x':0.5,
+        'xanchor': 'center', 
+        'yanchor': 'top'})
+
+    return fighp
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
+#%%
