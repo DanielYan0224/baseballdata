@@ -11,7 +11,8 @@ from IPython.display import display
 from fractions import Fraction as F
 from math import log
 from plotly.graph_objs import Figure
-
+import dash
+from dash import Dash, dcc, html, Input, Output 
 
 #################################
 #整理資料
@@ -56,25 +57,25 @@ def grill(df, x_lines, y_lines):
             ] =  label
     return df
 
-def matrix_year(df):
-    numerator = df.groupby('grill')['weighted_events']\
-    .sum().dropna().to_dict()
+def matrix_year(df, mapp):
+    df['weighted_events'] = df['new_event'].apply(lambda event: mapp.get(event, np.nan))  # 使用新的 mapp 计算权重
+
+    numerator = df.groupby('grill')['weighted_events'].sum().dropna().to_dict()
     denominator = df.groupby('grill').size().dropna().to_dict()
-    
+
     ratio = {}
     for grill in denominator:
         if grill == 'nan':
             continue
-        if grill in numerator:
-            if denominator[grill] > 0:
-                prob = numerator[grill] / denominator[grill]
-                ratio[grill] = prob
+        if grill in numerator and denominator[grill] > 0:
+            prob = numerator[grill] / denominator[grill]
+            ratio[grill] = prob
 
     A = [[0 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
-    for key in ratio:  
-        parts = key.split('_')  
-        if len(parts) == 2:  
-            j, i = [int(part) for part in parts] 
+    for key in ratio:
+        parts = key.split('_')
+        if len(parts) == 2:
+            j, i = [int(part) for part in parts]
             A[j][i] = ratio[key]
     return A
 
@@ -133,51 +134,59 @@ app.layout = html.Div([
             {'label': '2023 Data', 'value': '2023'}
         ],
         value='2022'  # 默认显示2022数据
-    )
+    ),
+    html.Div([
+        html.Div([
+            html.Label(f"{key}:"),
+            dcc.Input(id=f"{key}-input", type="number", value=mapp[key])
+        ], style={'padding': '10px'}) for key in mapp.keys()
+    ]),
+    html.Button('Update Heatmap', id='update-button', n_clicks=0),
 ])
 
 @app.callback(
     Output('heat-map', 'figure'),
-    [Input('dataset-dropdown', 'value')]
+    [Input('update-button', 'n_clicks'), Input('dataset-dropdown', 'value')] +
+    [Input(f"{key}-input", 'value') for key in mapp.keys()]
 )
+def update_heatmap(n_clicks, selected_year, *mapp_values):
+    # 更新 mapp 根据输入值
+    mapp_updated = dict(zip(mapp.keys(), mapp_values))
 
-def update_heatmap(selected_year):
+    # 根据选中的年份选择数据集
     if selected_year == '2022':
-        data = matrix_year(df2022)
+        data = matrix_year(df2022, mapp_updated)  # 假设 matrix_year 接受 mapp 参数
         title = "Heatmap for 2022"
     else:
-        data = matrix_year(df2023)
+        data = matrix_year(df2023, mapp_updated)
         title = "Heatmap for 2023"
 
-    # 初始熱圖
-    fighp = px.imshow(matrix_year(df2022), 
-            color_continuous_scale=px.colors.sequential.RdBu_r)
-    
-    # 更改顯示的座標
-    fighp.update_xaxes(tickvals=list(range(0, len(x_lines),5)),  
+    fighp = px.imshow(data, color_continuous_scale=px.colors.sequential.Blues)
+
+    # 更新坐标轴和布局
+    fighp.update_xaxes(
+        tickvals=list(range(0, len(x_lines), 5)),
         ticktext=[x_lines[k] for k in range(0, len(x_lines), 5)],
-        tickangle=15,  # = 0 keep the labels horizontal
+        tickangle=15,
         tickfont=dict(color='black'),
         ticks="outside", tickwidth=2, tickcolor="crimson",
-        ticklen=10)
-    fighp.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),  
-        ticktext=[round(y_lines[k], 2) for k in 
-                reversed(range(0, len(y_lines), 5))],
-        tickangle=0,  # = 0 keep the labels horizontal
+        ticklen=10
+    )
+    fighp.update_yaxes(
+        tickvals=list(range(0, len(y_lines), 5)),
+        ticktext=[round(y_lines[k], 2) for k in reversed(range(0, len(y_lines), 5))],
+        tickangle=0,
         tickfont=dict(color='black'),
         ticks="outside", tickwidth=2, tickcolor="crimson",
-        ticklen=10)
-    
+        ticklen=10
+    )
+
     fighp.update_layout(
-        title={
-        'text': title,   
-        'y':0.9,  
-        'x':0.5,
-        'xanchor': 'center', 
-        'yanchor': 'top'})
+        title={'text': title, 'y':0.9, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top'}
+    )
 
     return fighp
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=8080)
 #%%
