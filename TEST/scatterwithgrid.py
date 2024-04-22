@@ -11,7 +11,8 @@ from IPython.display import display
 from fractions import Fraction as F
 from math import log
 from plotly.graph_objs import Figure
-
+import dash
+from dash import Dash, dcc, html, Input, Output 
 
 #################################
 #整理資料
@@ -119,6 +120,7 @@ y_lines.append(y_max)
 
 
 app = dash.Dash(__name__)
+
 app.layout = html.Div([
     dcc.Graph(id='scatter-plot'),
     dcc.Dropdown(
@@ -166,27 +168,6 @@ def update_graph(selected_year):
 if __name__ == '__main__':
     app.run_server(debug=True)
 #%%
-# 定義grid
-x_min, x_max = df[x_label].min(), df[x_label].max()
-y_min, y_max = df[y_label].min(), df[y_label].max()
-
-grid_size_x = (x_max - x_min) / x_grids
-grid_size_y = (y_max - y_min) / y_grids
-x_lines = np.arange(x_min, x_max, grid_size_x).tolist()
-y_lines = np.arange(y_min, y_max, grid_size_y).tolist()
-
-x_lines.append(x_max)
-y_lines.append(y_max)
-
-for x in x_lines:
-    fig.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
-                xref='x', yref='y',
-                line=dict(color="Black", width=1))
-
-for y in y_lines:
-    fig.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
-                xref='x', yref='y',
-                line=dict(color="Black", width=1))
 
 
 

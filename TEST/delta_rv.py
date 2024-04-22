@@ -38,6 +38,8 @@ file_path_2 = r"C:\Users\user\Desktop\baseballdata\2023sppitchingdata.csv"
 ###########################################
 x_label = "launch_angle"
 y_label = "launch_speed"
+x_grids = 40
+y_grids = 40
 ###########################################
 
 df1 = sort_data(load_dataframe(file_path_1))
@@ -80,8 +82,21 @@ df23["bin_group"] = pd.Categorical(df23["bin_group"], categories=labels,
 
 df = pd.concat([df22, df23], ignore_index=True)
 
+x_min, x_max = df[x_label].min(), df[x_label].max()
+y_min, y_max = df[y_label].min(), df[y_label].max()
+
+grid_size_x = (x_max - x_min) / x_grids
+grid_size_y = (y_max - y_min) / y_grids
+x_lines = np.arange(x_min, x_max, grid_size_x).tolist()
+y_lines = np.arange(y_min, y_max, grid_size_y).tolist()
+
+x_lines.append(x_max)
+y_lines.append(y_max)
 
 
+
+###########################################
+# 製作互動式界面
 app = Dash(__name__)
 
 app.layout = html.Div([
@@ -102,10 +117,10 @@ app.layout = html.Div([
 )
 def update_graph(selected_year):
     if selected_year == '2022':
-        df = df22  # 确保 df22 是在这个作用域中定义的
+        df = df22  
         title = "Data for 2022"
     else:
-        df = df23  # 确保 df23 是在这个作用域中定义的
+        df = df23  
         title = "Data for 2023"
 
     fig = px.scatter(df, x="launch_angle", y="launch_speed",
@@ -114,8 +129,19 @@ def update_graph(selected_year):
                     marginal_x="histogram", 
                     marginal_y="histogram",
                     title=title)
+    
+    for x in x_lines:
+        fig.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
+                xref='x', yref='y',
+                line=dict(color="Black", width=1))
+
+    for y in y_lines:
+        fig.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
+                xref='x', yref='y',
+                line=dict(color="Black", width=1))
+
     return fig
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=8090)
 #%%

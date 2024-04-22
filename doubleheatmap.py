@@ -12,7 +12,7 @@ from fractions import Fraction as F
 from math import log
 from plotly.graph_objs import Figure
 import dash
-from dash import Dash, dcc, html, Input, Output 
+from dash import Dash, dcc, html, Input, Output, State 
 
 #################################
 #整理資料
@@ -39,7 +39,7 @@ def weight(events):
     mapping = mapp
     return mapping.get(events, np.nan)  # 其他的都是nan
 
-def scort_data (df):
+def sort_data (df):
     df = df.dropna(subset=[x_label, y_label], how='any')
     df = df[df['description'] == 'hit_into_play']
     df['new_event'] = df['events'].apply(new_event).astype(str)
@@ -85,9 +85,9 @@ file_path_2 = r"C:\Users\user\Desktop\baseballdata\2023sppitchingdata.csv"
 x_label = 'launch_angle'
 y_label = 'launch_speed'
 
-df1 = scort_data(load_dataframe(file_path_1))
+df1 = sort_data(load_dataframe(file_path_1))
 
-df2 = scort_data(load_dataframe(file_path_2))
+df2 = sort_data(load_dataframe(file_path_2))
 
 df = pd.concat([df1, df2], axis=0)
 
@@ -118,52 +118,63 @@ x_lines.append(x_max)
 y_lines.append(y_max)
 #################################
 
-df2022 = grill(scort_data(df1), x_lines, y_lines)
+df2022 = grill(sort_data(df1), x_lines, y_lines)
 df2022["weighted_events"] = df2022["new_event"].apply(weight)
-df2023 = grill(scort_data(df2), x_lines, y_lines)
+df2023 = grill(sort_data(df2), x_lines, y_lines)
 df2023["weighted_events"] = df2023["new_event"].apply(weight)
+
+#################################
 
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
-    dcc.Graph(id='heat-map'),
+    html.Div([ 
+        html.Div([  
+            html.Label(f"{key}:"),
+            dcc.Input(id=f"{key}-input", type="number", 
+                    value=mapp[key], style={'margin-right': '10px'})
+        ], style={'display': 'flex', 'padding': '5px'}) for key in mapp.keys()
+    ], style={'display': 'flex', 'flex-wrap': 'wrap',
+            'justify-content': 'space-between'}),
+
+    html.Button('Update Heatmap', id='update-button', n_clicks=0, 
+                style={'width': '100%', 'margin-top': '20px'}),
+
     dcc.Dropdown(
         id='dataset-dropdown',
         options=[
             {'label': '2022 Data', 'value': '2022'},
             {'label': '2023 Data', 'value': '2023'}
         ],
-        value='2022'  # 默认显示2022数据
+        value='2022'
     ),
-    html.Div([
-        html.Div([
-            html.Label(f"{key}:"),
-            dcc.Input(id=f"{key}-input", type="number", value=mapp[key])
-        ], style={'padding': '10px'}) for key in mapp.keys()
-    ]),
-    html.Button('Update Heatmap', id='update-button', n_clicks=0),
-])
 
+    dcc.Graph(id='heat-map')
+])
 @app.callback(
+        
     Output('heat-map', 'figure'),
-    [Input('update-button', 'n_clicks'), Input('dataset-dropdown', 'value')] +
-    [Input(f"{key}-input", 'value') for key in mapp.keys()]
+    [Input('update-button', 'n_clicks')],
+    [State('dataset-dropdown', 'value')] +
+    [State(f"{key}-input", 'value') for key in mapp.keys()]
 )
+
 def update_heatmap(n_clicks, selected_year, *mapp_values):
-    # 更新 mapp 根据输入值
+    # 更新mapp
     mapp_updated = dict(zip(mapp.keys(), mapp_values))
 
-    # 根据选中的年份选择数据集
+    # 年份選擇
     if selected_year == '2022':
-        data = matrix_year(df2022, mapp_updated)  # 假设 matrix_year 接受 mapp 参数
+        data = matrix_year(df2022, mapp_updated)  
         title = "Heatmap for 2022"
     else:
         data = matrix_year(df2023, mapp_updated)
         title = "Heatmap for 2023"
 
-    fighp = px.imshow(data, color_continuous_scale=px.colors.sequential.Blues)
+    fighp = px.imshow(data, 
+            color_continuous_scale=px.colors.sequential.Blues)
 
-    # 更新坐标轴和布局
+    # 更新座標軸
     fighp.update_xaxes(
         tickvals=list(range(0, len(x_lines), 5)),
         ticktext=[x_lines[k] for k in range(0, len(x_lines), 5)],
