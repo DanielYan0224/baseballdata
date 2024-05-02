@@ -13,7 +13,7 @@ from math import log
 from plotly.graph_objs import Figure
 import dash
 from dash import Dash, dcc, html, Input, Output, State 
-from scipy.ndimage import median_filter
+from scipy.ndimage import median_filter, gaussian_filter
 
 #################################
 #整理資料
@@ -78,9 +78,9 @@ study_df = load_dataframe(file_path)
 x_grids = 40
 y_grids = 40
 mapp = {'single': 1, 
-'double': 1, 
-'triple': 1, 
-'home_run': 1,
+'double': 2, 
+'triple': 3, 
+'home_run': 4,
 'DP': 0, 
 'field_out': 0,
         }
@@ -164,13 +164,99 @@ def matrix_year(df, mapp):
 
     return A
 
+
+
 color_list = df2022['new_event'].map(color_discrete_map).tolist()
 symbol_list = df2022['new_event'].map(symbol_map).tolist()
 color_list = df2023['new_event'].map(color_discrete_map).tolist()
 symbol_list = df2023['new_event'].map(symbol_map).tolist()
 
 
+data = np.array(matrix_year(df2023, mapp))
+filtered_data = gaussian_filter(data, sigma=1.5)
 
+
+# fighp = px.imshow(filtered_data, 
+#             #color_continuous_scale=px.colors.sequential.Blues
+#             )
+
+# fighp.add_trace(go.Contour(
+#     z=filtered_data,
+#     contours=dict(
+#             coloring='heatmap',
+#             showlabels=True, 
+#             labelfont=dict(
+#                 size=12,
+#                 color="white"
+#             )
+#         ),
+#         line_width=2
+#     )
+# )
+
+fighp = go.Figure(
+    go.Contour(
+        z=filtered_data,
+        x=[i for i in range(filtered_data.shape[1])],
+        y=[i for i in range(filtered_data.shape[0])],
+        contours=dict(
+            coloring='heatmap',
+            showlabels=True, 
+            labelfont=dict(
+                size=12,
+                color="white"
+            )
+        ),
+        line_width=2,
+        colorscale='Portland' 
+    )
+#     counters = dict(
+#         start=filtered_data.max(),
+#         end=filtered_data.min(),
+#         size = (filtered_data.max() - filtered_data.min()) / 10
+#     )
+# 
+)
+# 反轉 y 軸
+fighp.update_layout(
+    yaxis=dict(
+        autorange="reversed"  
+    )
+)
+
+# 更新x y軸座標標籤
+fighp.update_xaxes(tickvals=list(range(0, len(x_lines), 5)),
+    ticktext =[x_lines[k] for k in range(0, len(x_lines), 5)],
+    tickangle=15,
+    tickfont=dict(color="black"),
+    ticks="outside",tickwidth=2,
+    tickcolor="crimson",
+    ticklen=10)
+fighp.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),
+    ticktext =[round(y_lines[k], 2) for k in reversed(range(0, len(y_lines), 5))],
+    tickfont=dict(color="black"),
+    ticks="outside",tickwidth=2,
+    tickcolor="crimson",
+    ticklen=10)
+
+# 新增年份
+fighp.add_annotation(
+    text="2023",
+    align='left',
+    showarrow=False,
+    xref='paper',
+    yref='paper',
+    x=0.5,  
+    y=-0.2,  
+    font=dict(
+        size=20,
+        color="black"
+    )
+)
+
+# fighp.show()
+fighp.write_html('heatmap.html', auto_open=True)
+#%%
 app = dash.Dash(__name__)
 
 app.layout = html.Div([
@@ -235,17 +321,20 @@ def update_heatmap(n_clicks, selected_year, *values):
     fighp.update_layout(
         title={'text': title, 'y':0.9, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top'}
     )
-
-    for x in x_lines:
-        fighp.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
-                xref='x', yref='y',
-                line=dict(color="Black", width=1))
-
-    for y in y_lines:
-        fighp.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
-                xref='x', yref='y',
-                line=dict(color="Black", width=1))
-
+    # 更新x y軸座標標籤
+    fighp.update_xaxes(tickvals=list(range(0, len(x_lines), 5)),
+        ticktext =[x_lines[k] for k in range(0, len(x_lines), 5)],
+        tickangle=15,
+        tickfont=dict(color="black"),
+        ticks="outside",tickwidth=2,
+        tickcolor="crimson",
+        ticklen=10)
+    fighp.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),
+        ticktext =[round(y_lines[k], 2) for k in reversed(range(0, len(y_lines), 5))],
+        tickfont=dict(color="black"),
+        ticks="outside",tickwidth=2,
+        tickcolor="crimson",
+        ticklen=10)
     return fighp
 
 if __name__ == '__main__':
