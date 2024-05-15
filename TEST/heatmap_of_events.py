@@ -13,7 +13,11 @@ from math import log
 from plotly.graph_objs import Figure
 import dash
 from dash import Dash, dcc, html, Input, Output, State 
+from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from scipy.ndimage import median_filter, gaussian_filter
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+from matplotlib.path import Path
 
 #################################
 #整理資料
@@ -40,7 +44,7 @@ def weight(events):
     mapping = mapp
     return mapping.get(events, np.nan)  # 其他的都是nan
 
-def scort_data (df):
+def sort_data (df):
     df = df.dropna(subset=[x_label, y_label], how='any')
     df = df[df['description'] == 'hit_into_play']
     df['new_event'] = df['events'].apply(new_event).astype(str)
@@ -65,14 +69,15 @@ file_path_2 = r"C:\Users\user\Desktop\baseballdata\2023sppitchingdata.csv"
 x_label = 'launch_angle'
 y_label = 'launch_speed'
 
-df1 = scort_data(load_dataframe(file_path_1))
+df1 = sort_data(load_dataframe(file_path_1))
 
-df2 = scort_data(load_dataframe(file_path_2))
+df2 = sort_data(load_dataframe(file_path_2))
 
 df = pd.concat([df1, df2], axis=0)
-df.head()
+
 #################################
 #可調整
+year = 2022
 file_path = file_path_1
 study_df = load_dataframe(file_path)
 x_grids = 40
@@ -123,24 +128,11 @@ y_lines = np.arange(y_min, y_max, grid_size_y).tolist()
 x_lines.append(x_max)
 y_lines.append(y_max)
 
-# for x in x_lines:
-#     fig.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
-#                 xref='x', yref='y',
-#                 line=dict(color="Black", width=1))
 
-# for y in y_lines:
-#     fig.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
-#                 xref='x', yref='y',
-#                 line=dict(color="Black", width=1))
-
-
-
-
-df2022 = grill(scort_data(df1), x_lines, y_lines)
+df2022 = grill(sort_data(df1), x_lines, y_lines)
 df2022["weighted_events"] = df2022["new_event"].apply(weight)
-df2023 = grill(scort_data(df2), x_lines, y_lines)
+df2023 = grill(sort_data(df2), x_lines, y_lines)
 df2023["weighted_events"] = df2023["new_event"].apply(weight)
-
 
 def matrix_year(df, mapp):
     numerator = df.groupby('grill')['weighted_events'].sum().dropna().to_dict()
@@ -154,8 +146,8 @@ def matrix_year(df, mapp):
             if denominator[grill] > 0:
                 prob = numerator[grill] / denominator[grill]
                 ratio[grill] = prob
-    
-    A = [[0 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
+            
+    A = [[-1 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
     for key in ratio:
         parts = key.split('_')
         if len(parts) == 2:
@@ -172,10 +164,91 @@ color_list = df2023['new_event'].map(color_discrete_map).tolist()
 symbol_list = df2023['new_event'].map(symbol_map).tolist()
 
 
-data = np.array(matrix_year(df2023, mapp))
+data = np.array(matrix_year(df2022, mapp))
 filtered_data = gaussian_filter(data, sigma=1.5)
 
 
+# for row in filtered_data:
+#     print(" ".join(f"{elem:.2f}" for elem in row))
+
+fighp = go.Figure()
+
+
+##############
+
+
+# 添加彩色矩形
+# for i in range(len(x_lines) - 1):
+#     for j in range(len(y_lines) - 1):
+#         rgba_color = 'rgba' + str(tuple(color_matrix[j, i] * 255))  # 假设 color_matrix 是0-1范围的颜色值
+#         fighp.add_trace(go.Scatter(
+#             x=[x_lines[i], x_lines[i+1], x_lines[i+1], x_lines[i], x_lines[i]],  # 定义矩形四个角的 X 坐标
+#             y=[y_lines[-(j+1)], y_lines[-(j+1)], y_lines[-(j+2)], y_lines[-(j+2)], y_lines[-(j+1)]],  # 反转 Y 坐标
+#             fill="toself",
+#             fillcolor=rgba_color,
+#             mode='lines',
+#             line=dict(color=rgba_color),
+#             hoverinfo='text',  # 设置悬停信息为自定义文本
+#             text=[None, None, None, None, f"{filtered_data[j, i]:.2f}"],  # 在最后一个点显示数据值
+#             hovertemplate='<i>Value</i>: %{text}<extra></extra>',  # 自定义悬停模板
+#             showlegend=False
+#         ))
+
+custom_colorscale = [
+    [0, 'blue'],    
+    [0.1, 'green'], 
+    [0.175, 'yellow'], 
+    [0.2, 'orange'],
+    [1, 'red']       
+]
+
+fighp = go.Figure(data=go.Heatmap(
+    z=filtered_data, 
+    x=x_lines,  # x 邊界
+    y=y_lines[::-1],  # y 邊界
+    zmin=-1,
+    zmax=3,
+    colorscale='Jet',  
+    hoverongaps=False,  
+    hoverinfo='z',  
+    colorbar=dict(title='Data Values')  
+))
+
+# 添加x y 格線
+for x in x_lines:
+    fighp.add_shape(type='line', x0=x ,y0=y_min, x1=x, y1=y_max,
+            xref='x', yref='y',
+            line=dict(color="Gray", width=2))
+
+for y in y_lines:
+    fighp.add_shape(type='line', x0=x_min ,y0=y, x1=x_max, y1=y,
+            xref='x', yref='y',
+            line=dict(color="Gray", width=2))
+
+
+# Add points
+# points = df2022[[x_label, y_label]].to_numpy()
+# hull = ConvexHull(points)
+
+# Add convexhull
+# hull_points = points[hull.vertices]
+# hull_points = np.append(hull_points, [hull_points[0]], axis=0)
+# fighp.add_trace(go.Scatter(
+#     x=hull_points[:, 0],
+#     y=hull_points[:, 1],
+#     mode='lines',
+#     line=dict(color="White", width=3),
+#     name='Convex Hull'
+# ))
+
+fighp.update_layout(
+    title_text = year
+)
+
+
+fighp.show()
+#fighp.write_html("heatmp.html", auto_open=True)
+#%%
 # fighp = px.imshow(filtered_data, 
 #             #color_continuous_scale=px.colors.sequential.Blues
 #             )
