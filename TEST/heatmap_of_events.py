@@ -165,7 +165,8 @@ symbol_list = df2023['new_event'].map(symbol_map).tolist()
 
 
 data = np.array(matrix_year(df2022, mapp))
-filtered_data = gaussian_filter(data, sigma=1.5)
+filtered_data = data
+#gaussian_filter(data, sigma=1.5)
 
 
 # for row in filtered_data:
@@ -177,22 +178,7 @@ fighp = go.Figure()
 ##############
 
 
-# 添加彩色矩形
-# for i in range(len(x_lines) - 1):
-#     for j in range(len(y_lines) - 1):
-#         rgba_color = 'rgba' + str(tuple(color_matrix[j, i] * 255))  # 假设 color_matrix 是0-1范围的颜色值
-#         fighp.add_trace(go.Scatter(
-#             x=[x_lines[i], x_lines[i+1], x_lines[i+1], x_lines[i], x_lines[i]],  # 定义矩形四个角的 X 坐标
-#             y=[y_lines[-(j+1)], y_lines[-(j+1)], y_lines[-(j+2)], y_lines[-(j+2)], y_lines[-(j+1)]],  # 反转 Y 坐标
-#             fill="toself",
-#             fillcolor=rgba_color,
-#             mode='lines',
-#             line=dict(color=rgba_color),
-#             hoverinfo='text',  # 设置悬停信息为自定义文本
-#             text=[None, None, None, None, f"{filtered_data[j, i]:.2f}"],  # 在最后一个点显示数据值
-#             hovertemplate='<i>Value</i>: %{text}<extra></extra>',  # 自定义悬停模板
-#             showlegend=False
-#         ))
+
 
 custom_colorscale = [
     [0, 'blue'],    
@@ -225,24 +211,101 @@ for y in y_lines:
             xref='x', yref='y',
             line=dict(color="Gray", width=2))
 
+data = {}
+points = {}
+hulls = {}
+
+def compute_convex_hull(points):
+    hull = ConvexHull(points)
+    hull_points = points[hull.vertices]
+    # Closing the loop for the convex hull
+    hull_points = np.append(hull_points, [hull_points[0]], axis=0)
+    return hull_points
 
 # Add points
-# points = df2022[[x_label, y_label]].to_numpy()
-# hull = ConvexHull(points)
+data1 = df2022[df2022["launch_speed_angle"]==1]
+points1 = data1[[x_label, y_label]].to_numpy()
 
-# Add convexhull
-# hull_points = points[hull.vertices]
-# hull_points = np.append(hull_points, [hull_points[0]], axis=0)
-# fighp.add_trace(go.Scatter(
-#     x=hull_points[:, 0],
-#     y=hull_points[:, 1],
-#     mode='lines',
-#     line=dict(color="White", width=3),
-#     name='Convex Hull'
-# ))
+data2 = df2022[df2022["launch_speed_angle"]==2]
+points2 = data2[[x_label, y_label]].to_numpy()
+
+data3 = df2022[df2022["launch_speed_angle"]==3]
+points3 = data3[[x_label, y_label]].to_numpy()
+
+data4 = df2022[df2022["launch_speed_angle"]==4]
+points4 = data4[[x_label, y_label]].to_numpy()
+
+data5 = df2022[df2022["launch_speed_angle"]==5]
+points5 = data5[[x_label, y_label]].to_numpy()
+
+data6 = df2022[df2022["launch_speed_angle"]==6]
+points6 = data6[[x_label, y_label]].to_numpy()
+
+
+# Create hulls
+hull_points1 = compute_convex_hull(points1)
+hull_trace1 = go.Scatter(x=hull_points1[:, 0], y=hull_points1[:, 1],
+                         mode='lines',
+                         line=dict(width=4)
+                         #name='Convex Hull 1'
+                         )
+
+hull_points2 = compute_convex_hull(points2)
+hull_trace2 = go.Scatter(x=hull_points2[:, 0], 
+                         y=hull_points2[:, 1],
+                         mode='lines',
+                         line=dict(width=4))
+
+hull_points3 = compute_convex_hull(points3)
+hull_trace3 = go.Scatter(x=hull_points3[:, 0], 
+                         y=hull_points3[:, 1],
+                         mode='lines',
+                         line=dict(width=4))
+
+hull_points4 = compute_convex_hull(points4)
+hull_trace4 = go.Scatter(x=hull_points4[:, 0], 
+                         y=hull_points4[:, 1],
+                         mode='lines',
+                         line=dict(width=4))
+
+hull_points5 = compute_convex_hull(points5)
+hull_trace5 = go.Scatter(x=hull_points5[:, 0], 
+                         y=hull_points5[:, 1],
+                         mode='lines',
+                         line=dict(width=4, color="black"))
+
+hull_points6 = compute_convex_hull(points6)
+hull_trace6 = go.Scatter(x=hull_points6[:, 0], 
+                         y=hull_points6[:, 1],
+                         mode='lines',
+                         line=dict(width=4, color="white"))
 
 fighp.update_layout(
     title_text = year
+)
+
+
+
+fighp.add_trace(hull_trace1)
+fighp.add_trace(hull_trace2)
+fighp.add_trace(hull_trace3)
+fighp.add_trace(hull_trace4)
+fighp.add_trace(hull_trace5)
+fighp.add_trace(hull_trace6)
+
+fighp.update_layout(
+    coloraxis_colorbar=dict(
+        x=1.2,  # Move color bar further to the right
+        title='Color Scale'  # Title for the color bar
+    ),
+    legend=dict(
+        x=-0.2,  # Move legend slightly to the right
+        y=0.5,   # Center legend vertically
+        traceorder='normal',
+        bgcolor='rgba(255, 255, 255, 0.5)',  # Optional: add a background color for better readability
+        bordercolor='Black',
+        borderwidth=1
+    )
 )
 
 
