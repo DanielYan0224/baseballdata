@@ -310,7 +310,7 @@ fighp.update_layout(
 
 
 fighp.show()
-#fighp.write_html("heatmp.html", auto_open=True)
+fighp.write_html("heatmp.html", auto_open=True)
 #%%
 # fighp = px.imshow(filtered_data, 
 #             #color_continuous_scale=px.colors.sequential.Blues
