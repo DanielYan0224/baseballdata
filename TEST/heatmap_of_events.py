@@ -147,7 +147,7 @@ def matrix_year(df, mapp):
                 prob = numerator[grill] / denominator[grill]
                 ratio[grill] = prob
             
-    A = [[-1 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
+    A = [[-2 for _ in range(len(x_lines) - 1)] for _ in range(len(y_lines) - 1)]
     for key in ratio:
         parts = key.split('_')
         if len(parts) == 2:
@@ -166,11 +166,39 @@ symbol_list = df2023['new_event'].map(symbol_map).tolist()
 
 data = np.array(matrix_year(df2022, mapp))
 filtered_data = data
-#gaussian_filter(data, sigma=1.5)
+# text = np.array([[f'({i+1},{j+1})' 
+#         for j in range(filtered_data.shape[1])] for i in range(filtered_data.shape[0])])
 
 
-# for row in filtered_data:
-#     print(" ".join(f"{elem:.2f}" for elem in row))
+# 把初速小於60的全部設定成 0
+mask_1 = filtered_data[22:40, :] > 0
+filtered_data[22:40, :][mask_1]= 0
+
+original_data = filtered_data.copy()
+# 設定 region 2
+mask_2 = (original_data > 0) & \
+    (original_data <= 0.2)
+filtered_data[mask_2] = 1
+
+# 設定 region 3
+mask_3 = (original_data > 0.2) & \
+    (original_data <= 0.5)
+filtered_data[mask_3] = 2
+
+# 設定 region 4
+mask_4 = (original_data > 0.5) & \
+    (original_data <= 1)
+filtered_data[mask_4] = 3
+
+mask_6 = (original_data > 1) & \
+    (original_data <= 2)
+filtered_data[mask_6] = 4
+
+# 設定 region 5
+mask_5 = (original_data > 2) & \
+    (original_data <= 4)
+filtered_data[mask_5] = 4
+
 
 fighp = go.Figure()
 
@@ -192,11 +220,13 @@ fighp = go.Figure(data=go.Heatmap(
     z=filtered_data, 
     x=x_lines,  # x 邊界
     y=y_lines[::-1],  # y 邊界
-    zmin=-1,
-    zmax=3,
+    zmin=-2,
+    zmax=5,
     colorscale='Jet',  
     hoverongaps=False,  
     hoverinfo='z',  
+    # text=text, 
+    # texttemplate="%{text}<br>%{z}",  
     colorbar=dict(title='Data Values')  
 ))
 
@@ -211,87 +241,87 @@ for y in y_lines:
             xref='x', yref='y',
             line=dict(color="Gray", width=2))
 
-data = {}
-points = {}
-hulls = {}
+# data = {}
+# points = {}
+# hulls = {}
 
-def compute_convex_hull(points):
-    hull = ConvexHull(points)
-    hull_points = points[hull.vertices]
-    # Closing the loop for the convex hull
-    hull_points = np.append(hull_points, [hull_points[0]], axis=0)
-    return hull_points
+# def compute_convex_hull(points):
+#     hull = ConvexHull(points)
+#     hull_points = points[hull.vertices]
+#     # Closing the loop for the convex hull
+#     hull_points = np.append(hull_points, [hull_points[0]], axis=0)
+#     return hull_points
 
-# Add points
-data1 = df2022[df2022["launch_speed_angle"]==1]
-points1 = data1[[x_label, y_label]].to_numpy()
+# # Add points
+# data1 = df2022[df2022["launch_speed_angle"]==1]
+# points1 = data1[[x_label, y_label]].to_numpy()
 
-data2 = df2022[df2022["launch_speed_angle"]==2]
-points2 = data2[[x_label, y_label]].to_numpy()
+# data2 = df2022[df2022["launch_speed_angle"]==2]
+# points2 = data2[[x_label, y_label]].to_numpy()
 
-data3 = df2022[df2022["launch_speed_angle"]==3]
-points3 = data3[[x_label, y_label]].to_numpy()
+# data3 = df2022[df2022["launch_speed_angle"]==3]
+# points3 = data3[[x_label, y_label]].to_numpy()
 
-data4 = df2022[df2022["launch_speed_angle"]==4]
-points4 = data4[[x_label, y_label]].to_numpy()
+# data4 = df2022[df2022["launch_speed_angle"]==4]
+# points4 = data4[[x_label, y_label]].to_numpy()
 
-data5 = df2022[df2022["launch_speed_angle"]==5]
-points5 = data5[[x_label, y_label]].to_numpy()
+# data5 = df2022[df2022["launch_speed_angle"]==5]
+# points5 = data5[[x_label, y_label]].to_numpy()
 
-data6 = df2022[df2022["launch_speed_angle"]==6]
-points6 = data6[[x_label, y_label]].to_numpy()
-
-
-# Create hulls
-hull_points1 = compute_convex_hull(points1)
-hull_trace1 = go.Scatter(x=hull_points1[:, 0], y=hull_points1[:, 1],
-                         mode='lines',
-                         line=dict(width=4)
-                         #name='Convex Hull 1'
-                         )
-
-hull_points2 = compute_convex_hull(points2)
-hull_trace2 = go.Scatter(x=hull_points2[:, 0], 
-                         y=hull_points2[:, 1],
-                         mode='lines',
-                         line=dict(width=4))
-
-hull_points3 = compute_convex_hull(points3)
-hull_trace3 = go.Scatter(x=hull_points3[:, 0], 
-                         y=hull_points3[:, 1],
-                         mode='lines',
-                         line=dict(width=4))
-
-hull_points4 = compute_convex_hull(points4)
-hull_trace4 = go.Scatter(x=hull_points4[:, 0], 
-                         y=hull_points4[:, 1],
-                         mode='lines',
-                         line=dict(width=4))
-
-hull_points5 = compute_convex_hull(points5)
-hull_trace5 = go.Scatter(x=hull_points5[:, 0], 
-                         y=hull_points5[:, 1],
-                         mode='lines',
-                         line=dict(width=4, color="black"))
-
-hull_points6 = compute_convex_hull(points6)
-hull_trace6 = go.Scatter(x=hull_points6[:, 0], 
-                         y=hull_points6[:, 1],
-                         mode='lines',
-                         line=dict(width=4, color="white"))
-
-fighp.update_layout(
-    title_text = year
-)
+# data6 = df2022[df2022["launch_speed_angle"]==6]
+# points6 = data6[[x_label, y_label]].to_numpy()
 
 
+# # Create hulls
+# hull_points1 = compute_convex_hull(points1)
+# hull_trace1 = go.Scatter(x=hull_points1[:, 0], y=hull_points1[:, 1],
+#                          mode='lines',
+#                          line=dict(width=4)
+#                          #name='Convex Hull 1'
+#                          )
 
-fighp.add_trace(hull_trace1)
-fighp.add_trace(hull_trace2)
-fighp.add_trace(hull_trace3)
-fighp.add_trace(hull_trace4)
-fighp.add_trace(hull_trace5)
-fighp.add_trace(hull_trace6)
+# hull_points2 = compute_convex_hull(points2)
+# hull_trace2 = go.Scatter(x=hull_points2[:, 0], 
+#                          y=hull_points2[:, 1],
+#                          mode='lines',
+#                          line=dict(width=4))
+
+# hull_points3 = compute_convex_hull(points3)
+# hull_trace3 = go.Scatter(x=hull_points3[:, 0], 
+#                          y=hull_points3[:, 1],
+#                          mode='lines',
+#                          line=dict(width=4))
+
+# hull_points4 = compute_convex_hull(points4)
+# hull_trace4 = go.Scatter(x=hull_points4[:, 0], 
+#                          y=hull_points4[:, 1],
+#                          mode='lines',
+#                          line=dict(width=4))
+
+# hull_points5 = compute_convex_hull(points5)
+# hull_trace5 = go.Scatter(x=hull_points5[:, 0], 
+#                          y=hull_points5[:, 1],
+#                          mode='lines',
+#                          line=dict(width=4, color="black"))
+
+# hull_points6 = compute_convex_hull(points6)
+# hull_trace6 = go.Scatter(x=hull_points6[:, 0], 
+#                          y=hull_points6[:, 1],
+#                          mode='lines',
+#                          line=dict(width=4, color="white"))
+
+# fighp.update_layout(
+#     title_text = year
+# )
+
+
+
+# fighp.add_trace(hull_trace1)
+# fighp.add_trace(hull_trace2)
+# fighp.add_trace(hull_trace3)
+# fighp.add_trace(hull_trace4)
+# fighp.add_trace(hull_trace5)
+# fighp.add_trace(hull_trace6)
 
 fighp.update_layout(
     coloraxis_colorbar=dict(
@@ -311,168 +341,4 @@ fighp.update_layout(
 
 fighp.show()
 fighp.write_html("heatmp.html", auto_open=True)
-#%%
-# fighp = px.imshow(filtered_data, 
-#             #color_continuous_scale=px.colors.sequential.Blues
-#             )
-
-# fighp.add_trace(go.Contour(
-#     z=filtered_data,
-#     contours=dict(
-#             coloring='heatmap',
-#             showlabels=True, 
-#             labelfont=dict(
-#                 size=12,
-#                 color="white"
-#             )
-#         ),
-#         line_width=2
-#     )
-# )
-
-fighp = go.Figure(
-    go.Contour(
-        z=filtered_data,
-        x=[i for i in range(filtered_data.shape[1])],
-        y=[i for i in range(filtered_data.shape[0])],
-        contours=dict(
-            coloring='heatmap',
-            showlabels=True, 
-            labelfont=dict(
-                size=12,
-                color="white"
-            )
-        ),
-        line_width=2,
-        colorscale='Portland' 
-    )
-#     counters = dict(
-#         start=filtered_data.max(),
-#         end=filtered_data.min(),
-#         size = (filtered_data.max() - filtered_data.min()) / 10
-#     )
-# 
-)
-# 反轉 y 軸
-fighp.update_layout(
-    yaxis=dict(
-        autorange="reversed"  
-    )
-)
-
-# 更新x y軸座標標籤
-fighp.update_xaxes(tickvals=list(range(0, len(x_lines), 5)),
-    ticktext =[x_lines[k] for k in range(0, len(x_lines), 5)],
-    tickangle=15,
-    tickfont=dict(color="black"),
-    ticks="outside",tickwidth=2,
-    tickcolor="crimson",
-    ticklen=10)
-fighp.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),
-    ticktext =[round(y_lines[k], 2) for k in reversed(range(0, len(y_lines), 5))],
-    tickfont=dict(color="black"),
-    ticks="outside",tickwidth=2,
-    tickcolor="crimson",
-    ticklen=10)
-
-# 新增年份
-fighp.add_annotation(
-    text="2023",
-    align='left',
-    showarrow=False,
-    xref='paper',
-    yref='paper',
-    x=0.5,  
-    y=-0.2,  
-    font=dict(
-        size=20,
-        color="black"
-    )
-)
-
-# fighp.show()
-fighp.write_html('heatmap.html', auto_open=True)
-#%%
-app = dash.Dash(__name__)
-
-app.layout = html.Div([
-    html.Div([
-        html.Div([
-            # 顯示mapp的標籤
-            html.Label(f"{key}:", style={'margin-right': '10px'}),  
-            dcc.Input(
-                # 輸入框的 ID
-                id=f'input-{key}',
-                # 輸入數字  
-                type='number',
-                # 默認為原本mapp的數字  
-                value=value,  
-                # 輸入框的外邊界
-                style={'margin': '5px'} 
-            )
-            # 設置樣式 水平排列
-        ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'})  
-        for key, value in mapp.items() 
-    ]),
-    # 新增trigger
-    html.Button('Update Heatmap', id='update-button', n_clicks=0), 
-    dcc.Dropdown(
-        # 下拉列表
-        id='dataset-dropdown',  
-        options=[
-            {'label': '2022 Data', 'value': '2022'}, 
-            {'label': '2023 Data', 'value': '2023'}  
-        ],
-        value='2022'  
-    ),
-    dcc.Graph(id='heat-map') 
-])
-
-
-@app.callback(
-    Output('heat-map', 'figure'),
-    [Input('update-button', 'n_clicks')],
-    [State('dataset-dropdown', 'value')] +
-    [State(f'input-{key}', 'value') for key in mapp.keys()]
-)
-
-def update_heatmap(n_clicks, selected_year, *values):
-    updated_mapp = dict(zip(mapp.keys(), map(int, values)))
-
-    if selected_year == '2022':
-        df = df2022
-    else:
-        df = df2023
-
-
-    df["new_event"] = df['events'].apply(new_event).astype(str) 
-    df["weighted_events"] = df["new_event"]\
-        .apply(lambda event: updated_mapp.get(event, np.nan))
-
-    data = np.array(matrix_year(df, updated_mapp))
-    title = f"Heatmap for {selected_year}"
-
-    fighp = px.imshow(median_filter(data, size=5), 
-                    color_continuous_scale=px.colors.sequential.Blues)
-    fighp.update_layout(
-        title={'text': title, 'y':0.9, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top'}
-    )
-    # 更新x y軸座標標籤
-    fighp.update_xaxes(tickvals=list(range(0, len(x_lines), 5)),
-        ticktext =[x_lines[k] for k in range(0, len(x_lines), 5)],
-        tickangle=15,
-        tickfont=dict(color="black"),
-        ticks="outside",tickwidth=2,
-        tickcolor="crimson",
-        ticklen=10)
-    fighp.update_yaxes(tickvals=list(range(0, len(y_lines), 5)),
-        ticktext =[round(y_lines[k], 2) for k in reversed(range(0, len(y_lines), 5))],
-        tickfont=dict(color="black"),
-        ticks="outside",tickwidth=2,
-        tickcolor="crimson",
-        ticklen=10)
-    return fighp
-
-if __name__ == '__main__':
-    app.run_server(debug=True, port=8051)
 #%%
