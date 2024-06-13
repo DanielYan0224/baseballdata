@@ -18,6 +18,7 @@ from scipy.ndimage import median_filter, gaussian_filter
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib.path import Path
+from plotly.subplots import make_subplots
 
 #################################
 #整理資料
@@ -91,29 +92,6 @@ mapp = {'single': 1,
         }
 #################################
 
-symbol_map = {
-    'single': 'circle',           
-    'double': 'square',           
-    'triple': 'diamond',          
-    'home_run': 'star',           
-    'field_out': 'x',             
-    'DP': "hexagon", 
-    'others': 'triangle-up'       
-}
-
-color_discrete_map = {
-    'single': 'blue',
-    'double': 'orange',
-    'triple': 'green',
-    'home_run': 'red',
-    'field_out': 'purple',
-    'DP': 'black',    
-    'others': 'grey'  
-}             
-
-
-
-#################################
 # Draw the scatter plot
 
 # 定義grid
@@ -158,11 +136,12 @@ def matrix_year(df, mapp):
 
 
 
-color_list = df2022['new_event'].map(color_discrete_map).tolist()
-symbol_list = df2022['new_event'].map(symbol_map).tolist()
-color_list = df2023['new_event'].map(color_discrete_map).tolist()
-symbol_list = df2023['new_event'].map(symbol_map).tolist()
-
+# normailze array 
+def normalize_array(array):
+    min_val = np.min(array)
+    max_val = np.max(array)
+    normalized_array = (array - min_val) / (max_val - min_val)
+    return normalized_array
 
 data = np.array(matrix_year(df2022, mapp))
 filtered_data = data
@@ -170,59 +149,62 @@ filtered_data = data
 #         for j in range(filtered_data.shape[1])] for i in range(filtered_data.shape[0])])
 
 
+
 # 把初速小於60的全部設定成 0
-mask_1 = filtered_data[22:40, :] > 0
-filtered_data[22:40, :][mask_1]= 0
+mask_1 = filtered_data[22:40, :] >= 0
+filtered_data[22:40, :][mask_1]= 0.2
 
 original_data = filtered_data.copy()
-# 設定 region 2
-mask_2 = (original_data > 0) & \
-    (original_data <= 0.2)
-filtered_data[mask_2] = 1
+#normalize_array(filtered_data)
 
-# 設定 region 3
-mask_3 = (original_data > 0.2) & \
-    (original_data <= 0.5)
-filtered_data[mask_3] = 2
+
+# 設定 region 2
+mask_2 = (original_data[0:22, 1:26] >= 0) & \
+    (original_data[0:22, 1:26] <= 0.3)
+filtered_data[0:22, 1:26][mask_2] = 0.4
+
+#設定 region 3
+mask_3 = (original_data[0:22, 25:40] >= 0) & \
+    (original_data[0:22, 25:40] <= 0.3)
+filtered_data[0:22, 25:40][mask_3] = 0.6
 
 # 設定 region 4
-mask_4 = (original_data > 0.5) & \
-    (original_data <= 1)
-filtered_data[mask_4] = 3
-
-mask_6 = (original_data > 1) & \
-    (original_data <= 2)
-filtered_data[mask_6] = 4
+mask_4 = (original_data[1:22,18:30] >= 0.3) & \
+    (original_data[1:22, 18:30] <= 1)
+filtered_data[1:22, 18:30][mask_4] = 0.8
 
 # 設定 region 5
-mask_5 = (original_data > 2) & \
-    (original_data <= 4)
-filtered_data[mask_5] = 4
+mask_5 = (original_data[0:8,23:31] >= 1) 
+filtered_data[0:8, 23:31][mask_5] = 1
 
 
+## 微調heat map
+mask_6 = filtered_data[0:22, 0:19] >= 0
+filtered_data[0:22, 0:19][mask_6] = 0.4
+
+filtered_data[20,22] = 0.4
+
+filtered_data[19,31] = 0.6
+##############
 fighp = go.Figure()
 
-
-##############
-
-
-
-
-custom_colorscale = [
-    [0, 'blue'],    
-    [0.1, 'green'], 
-    [0.175, 'yellow'], 
-    [0.2, 'orange'],
-    [1, 'red']       
+colorscale = [
+    [0.0, 'blue'],   # 0
+    [0.2, 'green'],  # 0.2
+    [0.4, 'yellow'], # 0.4
+    [0.6, 'orange'], # 0.6
+    [0.8, 'red'],    # 0.8
+    [1.0, 'purple']  # 1.0
 ]
+
 
 fighp = go.Figure(data=go.Heatmap(
     z=filtered_data, 
     x=x_lines,  # x 邊界
     y=y_lines[::-1],  # y 邊界
-    zmin=-2,
-    zmax=5,
-    colorscale='Jet',  
+    zmin=0,
+    zmax=1,
+    colorscale=colorscale,  
     hoverongaps=False,  
     hoverinfo='z',  
     # text=text, 
@@ -241,88 +223,6 @@ for y in y_lines:
             xref='x', yref='y',
             line=dict(color="Gray", width=2))
 
-# data = {}
-# points = {}
-# hulls = {}
-
-# def compute_convex_hull(points):
-#     hull = ConvexHull(points)
-#     hull_points = points[hull.vertices]
-#     # Closing the loop for the convex hull
-#     hull_points = np.append(hull_points, [hull_points[0]], axis=0)
-#     return hull_points
-
-# # Add points
-# data1 = df2022[df2022["launch_speed_angle"]==1]
-# points1 = data1[[x_label, y_label]].to_numpy()
-
-# data2 = df2022[df2022["launch_speed_angle"]==2]
-# points2 = data2[[x_label, y_label]].to_numpy()
-
-# data3 = df2022[df2022["launch_speed_angle"]==3]
-# points3 = data3[[x_label, y_label]].to_numpy()
-
-# data4 = df2022[df2022["launch_speed_angle"]==4]
-# points4 = data4[[x_label, y_label]].to_numpy()
-
-# data5 = df2022[df2022["launch_speed_angle"]==5]
-# points5 = data5[[x_label, y_label]].to_numpy()
-
-# data6 = df2022[df2022["launch_speed_angle"]==6]
-# points6 = data6[[x_label, y_label]].to_numpy()
-
-
-# # Create hulls
-# hull_points1 = compute_convex_hull(points1)
-# hull_trace1 = go.Scatter(x=hull_points1[:, 0], y=hull_points1[:, 1],
-#                          mode='lines',
-#                          line=dict(width=4)
-#                          #name='Convex Hull 1'
-#                          )
-
-# hull_points2 = compute_convex_hull(points2)
-# hull_trace2 = go.Scatter(x=hull_points2[:, 0], 
-#                          y=hull_points2[:, 1],
-#                          mode='lines',
-#                          line=dict(width=4))
-
-# hull_points3 = compute_convex_hull(points3)
-# hull_trace3 = go.Scatter(x=hull_points3[:, 0], 
-#                          y=hull_points3[:, 1],
-#                          mode='lines',
-#                          line=dict(width=4))
-
-# hull_points4 = compute_convex_hull(points4)
-# hull_trace4 = go.Scatter(x=hull_points4[:, 0], 
-#                          y=hull_points4[:, 1],
-#                          mode='lines',
-#                          line=dict(width=4))
-
-# hull_points5 = compute_convex_hull(points5)
-# hull_trace5 = go.Scatter(x=hull_points5[:, 0], 
-#                          y=hull_points5[:, 1],
-#                          mode='lines',
-#                          line=dict(width=4, color="black"))
-
-# hull_points6 = compute_convex_hull(points6)
-# hull_trace6 = go.Scatter(x=hull_points6[:, 0], 
-#                          y=hull_points6[:, 1],
-#                          mode='lines',
-#                          line=dict(width=4, color="white"))
-
-# fighp.update_layout(
-#     title_text = year
-# )
-
-
-
-# fighp.add_trace(hull_trace1)
-# fighp.add_trace(hull_trace2)
-# fighp.add_trace(hull_trace3)
-# fighp.add_trace(hull_trace4)
-# fighp.add_trace(hull_trace5)
-# fighp.add_trace(hull_trace6)
-
 fighp.update_layout(
     coloraxis_colorbar=dict(
         x=1.2,  # Move color bar further to the right
@@ -339,6 +239,37 @@ fighp.update_layout(
 )
 
 
-fighp.show()
-fighp.write_html("heatmp.html", auto_open=True)
+scatter_colorscale = [
+    [0.0, 'green'],
+    [0.2, 'yellow'],
+    [0.4, 'orange'],
+    [0.6, 'red'],
+    [0.8, 'blue'],
+    [1.0, 'purple']
+]
+
+figscatter = px.scatter(
+    df,
+    x=x_label,
+    y=y_label,
+    color='launch_speed_angle',
+    color_continuous_scale=scatter_colorscale
+    # symbol='launch_speed_angle'
+)
+
+#fighp.show()
+#figscatter.show()
+
+def find_value(matrix, target_value):
+    coordinates = []
+    for i, row in enumerate(matrix):
+        for j, value in enumerate(row):
+            if value == target_value:
+                coordinates.append((i, j))
+    return coordinates
+
+target_value = 0.4
+coordinates = find_value(data, target_value)
+
+print(coordinates)
 #%%
