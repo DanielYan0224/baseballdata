@@ -185,6 +185,12 @@ filtered_data[0:22, 0:19][mask_6] = 0.4
 filtered_data[20,22] = 0.4
 
 filtered_data[19,31] = 0.6
+
+filtered_data[18,26] = filtered_data[18,25] = \
+filtered_data[17,25] = filtered_data[17,24] = \
+filtered_data[16,24] = filtered_data[15,24] = \
+filtered_data[14,23] = filtered_data[13,23] = \
+filtered_data[12,23] = filtered_data[11,23] = 0.75
 ##############
 fighp = go.Figure()
 
@@ -192,7 +198,8 @@ colorscale = [
     [0.0, 'blue'],   # 0
     [0.2, 'green'],  # 0.2
     [0.4, 'yellow'], # 0.4
-    [0.6, 'orange'], # 0.6
+    [0.6, 'orange'],
+    [0.75, 'black'], # 0.6
     [0.8, 'red'],    # 0.8
     [1.0, 'purple']  # 1.0
 ]
@@ -238,38 +245,51 @@ fighp.update_layout(
     )
 )
 
-
-scatter_colorscale = [
-    [0.0, 'green'],
-    [0.2, 'yellow'],
-    [0.4, 'orange'],
-    [0.6, 'red'],
-    [0.8, 'blue'],
-    [1.0, 'purple']
-]
-
-figscatter = px.scatter(
-    df,
-    x=x_label,
-    y=y_label,
-    color='launch_speed_angle',
-    color_continuous_scale=scatter_colorscale
-    # symbol='launch_speed_angle'
-)
-
 #fighp.show()
-#figscatter.show()
+
+
 
 def find_value(matrix, target_value):
-    coordinates = []
+    Y_zones = []
     for i, row in enumerate(matrix):
         for j, value in enumerate(row):
             if value == target_value:
-                coordinates.append((i, j))
-    return coordinates
+                Y_zones.append(f'{i}_{j}')
+    return Y_zones
 
-target_value = 0.4
-coordinates = find_value(data, target_value)
+Y_1 = find_value(data, 0.2)
+Y_2 = find_value(data, 0.4)
+Y_3 = find_value(data, 0.6)
+Y_4 = find_value(data, 0.75)
+Y_5 = find_value(data, 0.8)
+Y_6 = find_value(data, 1)
 
-print(coordinates)
+# Create mapping dictionary
+zone_mapping = {}
+
+# Map each Y zone to its corresponding numeric value
+for zone in Y_1:
+    zone_mapping[zone] = 1
+for zone in Y_2:
+    zone_mapping[zone] = 2
+for zone in Y_3:
+    zone_mapping[zone] = 3
+for zone in Y_4:
+    zone_mapping[zone] = 4
+for zone in Y_5:
+    zone_mapping[zone] = 5
+for zone in Y_6:
+    zone_mapping[zone] = 6
+
+# Function to classify 'grill' based on the mapping dictionary
+def classify_grill(grill):
+    return zone_mapping.get(grill, 0)  # Default to 0 if not found
+
+# Apply the classification to df2022
+df2022['Y_zone'] = df2022['grill'].apply(classify_grill)
+
+# Display the dataframe to check the results
+df2022['Y_zone'].sample(10)
+
+
 #%%
