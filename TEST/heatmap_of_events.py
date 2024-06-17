@@ -109,8 +109,9 @@ y_lines.append(y_max)
 
 df2022 = grill(sort_data(df1), x_lines, y_lines)
 df2022["weighted_events"] = df2022["new_event"].apply(weight)
-df2023 = grill(sort_data(df2), x_lines, y_lines)
-df2023["weighted_events"] = df2023["new_event"].apply(weight)
+
+pitch_type = 'SL'
+df2022 = df2022[df2022['pitch_type']==pitch_type]
 
 def matrix_year(df, mapp):
     numerator = df.groupby('grill')['weighted_events'].sum().dropna().to_dict()
@@ -144,26 +145,31 @@ def normalize_array(array):
     return normalized_array
 
 data = np.array(matrix_year(df2022, mapp))
+
+# 求矩陣數值
+flattened_data = [value for sublist in data 
+                for value in sublist if value != -2]
+
+data_50 = np.percentile(flattened_data, 50)
+data_80 = np.percentile(flattened_data, 80)
+data_100 = np.percentile(flattened_data, 100)
+
 filtered_data = data
-# text = np.array([[f'({i+1},{j+1})' 
-#         for j in range(filtered_data.shape[1])] for i in range(filtered_data.shape[0])])
+ 
 
 
-
-# 把初速小於60的全部設定成 0
+# 把初速小於60的全部設定成 0, zone 1
 mask_1 = filtered_data[22:40, :] >= 0
 filtered_data[22:40, :][mask_1]= 0.2
 
 original_data = filtered_data.copy()
-#normalize_array(filtered_data)
 
-
-# 設定 region 2
+# 設定 zone 2
 mask_2 = (original_data[0:22, 1:26] >= 0) & \
     (original_data[0:22, 1:26] <= 0.3)
 filtered_data[0:22, 1:26][mask_2] = 0.4
 
-#設定 region 3
+# #設定 region 3
 mask_3 = (original_data[0:22, 25:40] >= 0) & \
     (original_data[0:22, 25:40] <= 0.3)
 filtered_data[0:22, 25:40][mask_3] = 0.6
@@ -178,19 +184,33 @@ mask_5 = (original_data[0:8,23:31] >= 1)
 filtered_data[0:8, 23:31][mask_5] = 1
 
 
-## 微調heat map
+# 微調heat map
 mask_6 = filtered_data[0:22, 0:19] >= 0
 filtered_data[0:22, 0:19][mask_6] = 0.4
 
-filtered_data[20,22] = 0.4
+# red 
+filtered_data[17,22] = filtered_data[21,25] = filtered_data[21,27]=\
+filtered_data[14,24] = filtered_data[20,29] = filtered_data[20,26] = \
+filtered_data[20,22] = 0.8
 
-filtered_data[19,31] = 0.6
+# yellow
+filtered_data[15,19] = filtered_data[14,20] = 0.4
 
+# orange
+filtered_data[19,30] = filtered_data[19,31] = filtered_data[18,31] = \
+filtered_data[17,30] = filtered_data[16,31] = filtered_data[16,32] = \
+filtered_data[5,30] = 0.6
+
+# black
 filtered_data[18,26] = filtered_data[18,25] = \
 filtered_data[17,25] = filtered_data[17,24] = \
 filtered_data[16,24] = filtered_data[15,24] = \
 filtered_data[14,23] = filtered_data[13,23] = \
 filtered_data[12,23] = filtered_data[11,23] = 0.75
+
+# purple
+filtered_data[2,22] = filtered_data[3,22] = filtered_data[4,22] = \
+filtered_data[5,22] = filtered_data[6,22] = filtered_data[8,26] = 1
 ##############
 fighp = go.Figure()
 
@@ -213,11 +233,14 @@ fighp = go.Figure(data=go.Heatmap(
     zmax=1,
     colorscale=colorscale,  
     hoverongaps=False,  
-    hoverinfo='z',  
-    # text=text, 
+    hoverinfo='z',   
     # texttemplate="%{text}<br>%{z}",  
-    colorbar=dict(title='Data Values')  
+    colorbar=dict(title='Data Values')
 ))
+
+fighp.update_layout(
+    title=pitch_type
+)
 
 # 添加x y 格線
 for x in x_lines:
@@ -245,9 +268,7 @@ fighp.update_layout(
     )
 )
 
-#fighp.show()
-
-
+fighp.show()
 
 def find_value(matrix, target_value):
     Y_zones = []
@@ -288,8 +309,11 @@ def classify_grill(grill):
 # Apply the classification to df2022
 df2022['Y_zone'] = df2022['grill'].apply(classify_grill)
 
-# Display the dataframe to check the results
-df2022['Y_zone'].sample(10)
+counts =  df2022['Y_zone'].value_counts()
+proportions = df2022['Y_zone'].value_counts(normalize=True)
+shannon_entropy = -np.sum(proportions * np.log2(proportions))
 
-
+result = pd.DataFrame({'Count': counts, 'Proportion': proportions, 
+                       "Entropy": shannon_entropy})
+print(result)
 #%%
