@@ -96,7 +96,7 @@ mapp = {'single': 1,
 
 # 定義grid
 x_min, x_max = df[x_label].min(), df[x_label].max()
-y_min, y_max = df[y_label].min(), df[y_label].max()
+y_min, y_max = 0, 120
 
 grid_size_x = (x_max - x_min) / x_grids
 grid_size_y = (y_max - y_min) / y_grids
@@ -110,7 +110,7 @@ y_lines.append(y_max)
 df2022 = grill(sort_data(df1), x_lines, y_lines)
 df2022["weighted_events"] = df2022["new_event"].apply(weight)
 
-pitch_type = 'SL'
+pitch_type = 'FF'
 df2022 = df2022[df2022['pitch_type']==pitch_type]
 
 def matrix_year(df, mapp):
@@ -150,9 +150,6 @@ data = np.array(matrix_year(df2022, mapp))
 flattened_data = [value for sublist in data 
                 for value in sublist if value != -2]
 
-data_50 = np.percentile(flattened_data, 50)
-data_80 = np.percentile(flattened_data, 80)
-data_100 = np.percentile(flattened_data, 100)
 
 filtered_data = data
  
@@ -188,9 +185,12 @@ filtered_data[0:8, 23:31][mask_5] = 1
 mask_6 = filtered_data[0:22, 0:19] >= 0
 filtered_data[0:22, 0:19][mask_6] = 0.4
 
+filtered_data[4,30] = 0.2
+
 # red 
 filtered_data[17,22] = filtered_data[21,25] = filtered_data[21,27]=\
 filtered_data[14,24] = filtered_data[20,29] = filtered_data[20,26] = \
+filtered_data[21,28] = filtered_data[19,28] = filtered_data[21,29] = 0.8
 filtered_data[20,22] = 0.8
 
 # yellow
@@ -199,18 +199,23 @@ filtered_data[15,19] = filtered_data[14,20] = 0.4
 # orange
 filtered_data[19,30] = filtered_data[19,31] = filtered_data[18,31] = \
 filtered_data[17,30] = filtered_data[16,31] = filtered_data[16,32] = \
-filtered_data[5,30] = 0.6
+filtered_data[5,30] = filtered_data[22,30] = \
+filtered_data[21,30] = filtered_data[16,30] = filtered_data[17,31] = \
+filtered_data[15,32] = 0.6
 
 # black
 filtered_data[18,26] = filtered_data[18,25] = \
 filtered_data[17,25] = filtered_data[17,24] = \
 filtered_data[16,24] = filtered_data[15,24] = \
 filtered_data[14,23] = filtered_data[13,23] = \
-filtered_data[12,23] = filtered_data[11,23] = 0.75
+filtered_data[12,23] = filtered_data[11,23] = \
+filtered_data[16,25] = filtered_data[13,24] = \
+filtered_data[14,24] = 0.75
 
 # purple
 filtered_data[2,22] = filtered_data[3,22] = filtered_data[4,22] = \
-filtered_data[5,22] = filtered_data[6,22] = filtered_data[8,26] = 1
+filtered_data[5,22] = filtered_data[6,22] = filtered_data[1,22] = \
+filtered_data[7,22] =1
 ##############
 fighp = go.Figure()
 
@@ -308,6 +313,8 @@ def classify_grill(grill):
 
 # Apply the classification to df2022
 df2022['Y_zone'] = df2022['grill'].apply(classify_grill)
+
+# print(df2022[df2022['Y_zone']==0]['grill'])
 
 counts =  df2022['Y_zone'].value_counts()
 proportions = df2022['Y_zone'].value_counts(normalize=True)
